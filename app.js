@@ -1,0 +1,1 @@
+const g=document.getElementById('g'),t=document.getElementById('t'),o=document.getElementById('o');function c(){let v=parseFloat((g.value||'0').replace(',','.'));o.textContent=isNaN(v)?'0,00 TL':(v*+t.value).toLocaleString('tr-TR',{minimumFractionDigits:2})+' TL';}g.oninput=c;t.onchange=c;if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js');}
