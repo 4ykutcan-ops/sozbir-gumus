@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Söz-Bir Gümüş</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Söz-Bir Gümüş">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2682/2682065.png">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        silver: {
+                            100: '#f3f4f6',
+                            500: '#9ca3af',
+                            800: '#1f2937',
+                            900: '#111827'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        button, input, select {
+            touch-action: manipulation;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-900">
+
+    <!-- Üst Başlık / Navigasyon -->
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-30 px-4 py-3 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <!-- Özel Söz-Bir Gümüş Logo -->
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-400 via-slate-100 to-slate-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-md border border-slate-200/50">
+                S
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base leading-tight text-slate-100 tracking-wide">SÖZ-BİR GÜMÜŞ</h1>
+                <p id="roleBadge" class="text-[10px] text-emerald-400 font-medium">Personel Modu (Max %7.5)</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Yönetici Giriş Butonu -->
+            <button onclick="toggleAdminModal()" id="adminBtn" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 transition flex items-center gap-1">
+                <span>🔑</span> <span id="adminBtnText">Yönetici</span>
+            </button>
+            <!-- Fiyat Düzenleme Butonu -->
+            <button onclick="togglePriceModal()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 transition flex items-center gap-1">
+                <span>🏷️</span> Fiyatlar
+            </button>
+        </div>
+    </header>
+
+    <!-- ANA HESAPLAMA EKRANI -->
+    <main id="mainCalculator" class="flex-1 p-4 max-w-md mx-auto w-full space-y-4 pb-28">
+
+        <!-- Ürün Seçimi ve Anlık Fiyat Göstergesi Card -->
+        <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-4">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ürün Fiyat Hesaplama</h2>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <!-- Ürün Seçimi -->
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Ürün Türü</label>
+                    <select id="productSelect" onchange="calculateLiveItemPrice()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition">
+                        <!-- JS ile dolacak -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Gram Fiyatı Göstergesi -->
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Gram Fiyatı</label>
+                        <div id="unitPriceDisplay" class="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl px-3 py-3 text-sm text-slate-300 font-mono font-medium flex items-center justify-between">
+                            0 TL
+                        </div>
+                    </div>
+
+                    <!-- Gramaj Girişi -->
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Ağırlık (Gram)</label>
+                        <input type="number" id="gramInput" step="0.01" placeholder="0.00" oninput="calculateLiveItemPrice()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-slate-100 font-mono focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                </div>
+
+                <!-- ANLIK ÜRÜN FİYAT GÖSTERGESİ (Sepete Eklenmeden Önceki Fiyat) -->
+                <div class="bg-gradient-to-r from-slate-950 to-slate-900 border border-amber-500/30 rounded-xl p-3.5 flex justify-between items-center shadow-inner">
+                    <div>
+                        <span class="text-[10px] text-amber-400/80 font-semibold uppercase tracking-wider block">Seçili Ürün Tutarı</span>
+                        <span class="text-xs text-slate-400">Sepete eklenmeden önceki tutar</span>
+                    </div>
+                    <div id="liveItemPriceDisplay" class="text-xl font-extrabold text-amber-400 font-mono">
+                        0.00 TL
+                    </div>
+                </div>
+
+                <!-- Sepete Ekle Butonu -->
+                <button onclick="addToCart()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/10 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm">
+                    <span>➕</span> Sepete Ekle
+                </button>
+            </div>
+        </div>
+
+        <!-- Eklenen Ürünler Listesi (Sepet) -->
+        <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Eklenen Ürünler (<span id="cartCount">0</span>)</h2>
+                <button onclick="clearCart()" class="text-xs text-rose-400 hover:text-rose-300 transition">Temizle</button>
+            </div>
+
+            <div id="cartList" class="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
+                <p class="text-xs text-slate-500 text-center py-4">Henüz ürün eklenmedi.</p>
+            </div>
+        </div>
+
+        <!-- İskonto & Özet Hesaplama Card -->
+        <div class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl space-y-4">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">İskonto & Genel Hesaplama</h2>
+
+            <!-- İskonto Girişi -->
+            <div>
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">İskonto Oranı (%)</span>
+                    <span id="maxDiscountHint" class="text-amber-400/80 font-mono">Max %7.5</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" id="discountInput" min="0" max="7.5" step="0.5" value="0" oninput="calculateTotal()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500 transition">
+                    <div class="flex gap-1">
+                        <button onclick="setDiscount(3)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-mono text-slate-300 border border-slate-700">%3</button>
+                        <button onclick="setDiscount(5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-mono text-slate-300 border border-slate-700">%5</button>
+                        <button id="maxBtn" onclick="setMaxDiscount()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-xs font-mono border border-amber-500/30">Max</button>
+                    </div>
+                </div>
+                <p id="discountError" class="text-[11px] text-rose-400 mt-1 hidden">İskonto sınırını aştınız!</p>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- Fiyat Özeti -->
+            <div class="space-y-1.5 text-xs font-mono">
+                <div class="flex justify-between text-slate-400">
+                    <span>Ara Toplam:</span>
+                    <span id="subtotalDisplay">0.00 TL</span>
+                </div>
+                <div class="flex justify-between text-rose-400">
+                    <span>İskonto İndirimi:</span>
+                    <span id="discountAmountDisplay">-0.00 TL</span>
+                </div>
+                <div class="flex justify-between text-base font-bold text-emerald-400 pt-2 border-t border-slate-800/80">
+                    <span>GENEL TOPLAM:</span>
+                    <span id="finalTotalDisplay">0.00 TL</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MÜŞTERİ EKRANI (Şık Logo ve İlgilenen Kişi Aykut Kaplan Bilgisi) -->
+    <div id="customerScreen" class="fixed inset-0 bg-slate-950 z-50 flex flex-col justify-between p-6 hidden">
+        <!-- Üst Kısım -->
+        <div class="flex justify-between items-center border-b border-slate-800/80 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-400 via-slate-100 to-slate-300 flex items-center justify-center text-slate-950 font-black text-2xl shadow-xl border border-slate-200/60">
+                    S
+                </div>
+                <div>
+                    <h2 class="text-slate-100 font-extrabold text-xl tracking-wide">SÖZ-BİR GÜMÜŞ</h2>
+                    <p class="text-xs text-amber-400 font-medium">İlgilenen Kişi: Aykut Kaplan</p>
+                </div>
+            </div>
+            <button onclick="closeCustomerScreen()" class="p-2.5 bg-slate-900 rounded-full border border-slate-800 text-slate-400 hover:text-slate-200">
+                ✕
+            </button>
+        </div>
+
+        <!-- Orta Kısım / Müşteri Fiyat Widget Kartı -->
+        <div class="my-auto">
+            <div class="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-3xl p-8 border border-slate-800 shadow-2xl space-y-6 text-center max-w-sm mx-auto relative overflow-hidden">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+                
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-slate-400 font-semibold block mb-2">Ödenecek Tutar</span>
+                    <div id="customerFinalPrice" class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 font-mono tracking-tight">
+                        0.00 TL
+                    </div>
+                </div>
+
+                <!-- İskonto Detayı -->
+                <div id="customerDiscountBadge" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs font-medium">
+                    <span>🎉 İskonto Uygulandı:</span>
+                    <span id="customerDiscountPercent" class="font-bold font-mono">%0</span>
+                    <span id="customerDiscountAmount" class="font-mono">(-0 TL)</span>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/80 flex justify-around text-xs text-slate-400 font-mono">
+                    <div>
+                        <span class="block text-[10px] text-slate-500 uppercase">Toplam Parça</span>
+                        <span id="customerItemCount" class="text-sm font-bold text-slate-200">0 Adet</span>
+                    </div>
+                    <div class="border-r border-slate-800"></div>
+                    <div>
+                        <span class="block text-[10px] text-slate-500 uppercase">Toplam Gram</span>
+                        <span id="customerTotalGram" class="text-sm font-bold text-slate-200">0.00 gr</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alt Kısım -->
+        <div class="text-center">
+            <button onclick="closeCustomerScreen()" class="w-full max-w-sm py-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-300 font-semibold text-sm active:bg-slate-800 transition">
+                Hesaplama Ekranına Dön
+            </button>
+        </div>
+    </div>
+
+    <!-- Alt Sabit Bar -->
+    <div id="bottomBar" class="fixed bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur border-t border-slate-800 p-4 z-20">
+        <div class="max-w-md mx-auto flex gap-3">
+            <button onclick="openCustomerScreen()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-500/10 transition flex items-center justify-center gap-2 text-sm">
+                <span>👁️</span> Müşteriye Fiyat Göster
+            </button>
+        </div>
+    </div>
+
+    <!-- YÖNETİCİ ŞİFRE MODAL -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-xs w-full space-y-4 shadow-2xl">
+            <h3 class="font-bold text-slate-200 text-sm">Yönetici Girişi</h3>
+            <p class="text-xs text-slate-400">Max %12.5 iskonto yetkisi için şifrenizi girin. (Varsayılan: 1234)</p>
+            <input type="password" id="adminPasswordInput" placeholder="Şifre" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono focus:outline-none focus:border-amber-500">
+            <p id="adminAuthError" class="text-xs text-rose-400 hidden">Hatalı şifre!</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleAdminModal()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200">İptal</button>
+                <button onclick="authenticateAdmin()" class="px-4 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg">Giriş Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAM FİYATLARI DÜZENLEME MODAL -->
+    <div id="priceModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <h3 class="font-bold text-slate-200 text-sm">Gram Fiyat Kataloğu</h3>
+            <p class="text-xs text-slate-400">Ürünlerin gram satış fiyatlarını güncelleyebilirsiniz.</p>
+            
+            <div id="priceListContainer" class="space-y-2 overflow-y-auto pr-1 no-scrollbar flex-1">
+                <!-- JS ile dolacak -->
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <button onclick="togglePriceModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-xl border border-slate-700">Kapat</button>
+                <button onclick="savePrices()" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uygulama Mantığı (JS) -->
+    <script>
+        let productPrices = {
+            "Erkek Yüzük": 250,
+            "Erkek Zincir Künye": 350,
+            "Alyans": 350,
+            "Püskül": 280,
+            "Bayan Yüzük": 400,
+            "Bayan Bileklik": 400,
+            "Bayan Halhal": 400,
+            "Bayan Küpe": 400,
+            "Bayan Set": 400
+        };
+
+        let cart = [];
+        let isAdmin = false;
+        let maxDiscountLimit = 7.5;
+
+        window.onload = function() {
+            const savedPrices = localStorage.getItem('gumus_prices');
+            if(savedPrices) {
+                productPrices = JSON.parse(savedPrices);
+            }
+            populateProductSelect();
+            calculateLiveItemPrice();
+            renderCart();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Kayıt hatası:', err));
+            }
+        };
+
+        function populateProductSelect() {
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '';
+            for (let name in productPrices) {
+                let opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = `${name} (${productPrices[name]} TL/gr)`;
+                select.appendChild(opt);
+            }
+        }
+
+        function calculateLiveItemPrice() {
+            const selectedProduct = document.getElementById('productSelect').value;
+            const unitPrice = productPrices[selectedProduct] || 0;
+            const gramInput = document.getElementById('gramInput');
+            const gram = parseFloat(gramInput.value) || 0;
+
+            document.getElementById('unitPriceDisplay').innerText = `${unitPrice} TL / gr`;
+
+            const itemTotalPrice = gram * unitPrice;
+            document.getElementById('liveItemPriceDisplay').innerText = `${itemTotalPrice.toFixed(2)} TL`;
+        }
+
+        function addToCart() {
+            const productName = document.getElementById('productSelect').value;
+            const gramInput = document.getElementById('gramInput');
+            const gram = parseFloat(gramInput.value);
+
+            if (!gram || gram <= 0) {
+                alert('Lütfen geçerli bir gram giriniz!');
+                return;
+            }
+
+            const unitPrice = productPrices[productName];
+            const totalPrice = gram * unitPrice;
+
+            cart.push({
+                id: Date.now(),
+                name: productName,
+                gram: gram,
+                unitPrice: unitPrice,
+                totalPrice: totalPrice
+            });
+
+            gramInput.value = '';
+            calculateLiveItemPrice();
+            renderCart();
+            calculateTotal();
+        }
+
+        function renderCart() {
+            const cartList = document.getElementById('cartList');
+            const cartCount = document.getElementById('cartCount');
+            cartCount.innerText = cart.length;
+
+            if (cart.length === 0) {
+                cartList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Henüz ürün eklenmedi.</p>';
+                return;
+            }
+
+            cartList.innerHTML = '';
+            cart.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex justify-between items-center bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 text-xs';
+                itemEl.innerHTML = `
+                    <div>
+                        <span class="font-medium text-slate-200 block">${item.name}</span>
+                        <span class="text-slate-400 font-mono">${item.gram} gr x ${item.unitPrice} TL</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono font-bold text-amber-400">${item.totalPrice.toFixed(2)} TL</span>
+                        <button onclick="removeFromCart(${index})" class="text-rose-400 hover:text-rose-300 px-1">✕</button>
+                    </div>
+                `;
+                cartList.appendChild(itemEl);
+            });
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+            calculateTotal();
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            cart = [];
+            renderCart();
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+            const discountInput = document.getElementById('discountInput');
+            let discountPercent = parseFloat(discountInput.value) || 0;
+            const discountError = document.getElementById('discountError');
+
+            if (discountPercent > maxDiscountLimit) {
+                discountError.innerText = `Maksimum %${maxDiscountLimit} iskonto yapabilirsiniz!`;
+                discountError.classList.remove('hidden');
+                discountPercent = maxDiscountLimit;
+                discountInput.value = maxDiscountLimit;
+            } else if(discountPercent < 0) {
+                discountPercent = 0;
+                discountInput.value = 0;
+                discountError.classList.add('hidden');
+            } else {
+                discountError.classList.add('hidden');
+            }
+
+            const discountAmount = (subtotal * discountPercent) / 100;
+            const finalTotal = subtotal - discountAmount;
+
+            document.getElementById('subtotalDisplay').innerText = `${subtotal.toFixed(2)} TL`;
+            document.getElementById('discountAmountDisplay').innerText = `-${discountAmount.toFixed(2)} TL`;
+            document.getElementById('finalTotalDisplay').innerText = `${finalTotal.toFixed(2)} TL`;
+
+            document.getElementById('customerFinalPrice').innerText = `${finalTotal.toFixed(2)} TL`;
+            document.getElementById('customerDiscountPercent').innerText = `%${discountPercent}`;
+            document.getElementById('customerDiscountAmount').innerText = `(-${discountAmount.toFixed(2)} TL)`;
+            document.getElementById('customerItemCount').innerText = `${cart.length} Adet`;
+
+            const totalGram = cart.reduce((sum, item) => sum + item.gram, 0);
+            document.getElementById('customerTotalGram').innerText = `${totalGram.toFixed(2)} gr`;
+
+            const customerDiscountBadge = document.getElementById('customerDiscountBadge');
+            if (discountPercent > 0) {
+                customerDiscountBadge.classList.remove('hidden');
+            } else {
+                customerDiscountBadge.classList.add('hidden');
+            }
+        }
+
+        function setDiscount(val) {
+            if (val > maxDiscountLimit) {
+                alert(`Yetkiniz maksimum %${maxDiscountLimit} iskontoya izin veriyor.`);
+                val = maxDiscountLimit;
+            }
+            document.getElementById('discountInput').value = val;
+            calculateTotal();
+        }
+
+        function setMaxDiscount() {
+            setDiscount(maxDiscountLimit);
+        }
+
+        function toggleAdminModal() {
+            const modal = document.getElementById('adminModal');
+            document.getElementById('adminAuthError').classList.add('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            modal.classList.toggle('hidden');
+        }
+
+        function authenticateAdmin() {
+            const pass = document.getElementById('adminPasswordInput').value;
+            if (pass === "1234") {
+                isAdmin = true;
+                maxDiscountLimit = 12.5;
+                document.getElementById('roleBadge').innerText = "Yönetici Modu (Max %12.5)";
+                document.getElementById('roleBadge').className = "text-[10px] text-amber-400 font-medium";
+                document.getElementById('maxDiscountHint').innerText = "Max %12.5";
+                document.getElementById('adminBtnText').innerText = "Yönetici (Aktif)";
+                document.getElementById('adminBtn').className = "px-2.5 py-1.5 bg-amber-500/20 text-amber-300 text-xs rounded-lg border border-amber-500/30 transition flex items-center gap-1";
+                
+                document.getElementById('discountInput').setAttribute('max', '12.5');
+                toggleAdminModal();
+                calculateTotal();
+            } else {
+                document.getElementById('adminAuthError').classList.remove('hidden');
+            }
+        }
+
+        function togglePriceModal() {
+            const modal = document.getElementById('priceModal');
+            if (modal.classList.contains('hidden')) {
+                const container = document.getElementById('priceListContainer');
+                container.innerHTML = '';
+                for (let name in productPrices) {
+                    let div = document.createElement('div');
+                    div.className = 'flex justify-between items-center gap-2 text-xs bg-slate-950 p-2 rounded-xl border border-slate-800';
+                    div.innerHTML = `
+                        <span class="text-slate-300 font-medium">${name}</span>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="price_input_${name}" value="${productPrices[name]}" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right font-mono text-amber-400 focus:outline-none">
+                            <span class="text-slate-500">TL</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+            modal.classList.toggle('hidden');
+        }
+
+        function savePrices() {
+            for (let name in productPrices) {
+                const input = document.getElementById(`price_input_${name}`);
+                if (input && input.value) {
+                    productPrices[name] = parseFloat(input.value);
+                }
+            }
+            localStorage.setItem('gumus_prices', JSON.stringify(productPrices));
+            populateProductSelect();
+            calculateLiveItemPrice();
+            togglePriceModal();
+            calculateTotal();
+        }
+
+        function openCustomerScreen() {
+            document.getElementById('customerScreen').classList.remove('hidden');
+        }
+
+        function closeCustomerScreen() {
+            document.getElementById('customerScreen').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
