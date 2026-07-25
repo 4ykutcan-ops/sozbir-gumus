@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sozbir-gumus-v1';
+const CACHE_NAME = 'sozbir-gumus-vip-v6';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com'
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap'
 ];
 
 self.addEventListener('install', (e) => {
