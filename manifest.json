@@ -1,0 +1,17 @@
+{
+  "short_name": "Söz-Bir Gümüş",
+  "name": "Söz-Bir Gümüş Fiyat & İskonto Hesaplayıcı",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2682/2682065.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
+
