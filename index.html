@@ -117,7 +117,6 @@
             }
         }
 
-        /* ANLIK CANLI DÖVİZ DEĞİŞİM ANİMASYONLARI */
         .flash-up {
             animation: flashGreen 1s ease-out;
             color: #34d399 !important;
@@ -167,12 +166,6 @@
             transform: scale(0.98);
         }
 
-        @media (orientation: landscape) {
-            .landscape-hide {
-                display: none !important;
-            }
-        }
-
         button, input, select {
             touch-action: manipulation;
         }
@@ -203,7 +196,7 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Manuel Yenile" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
+            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Yenile" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 <span class="font-bold">Canlı</span>
             </button>
@@ -216,23 +209,23 @@
         </div>
     </header>
 
-    <!-- CANLI BÖRSAM / DÖVİZ BANDI -->
-    <div onclick="fetchLiveRates()" title="Kurları Anlık Yenile" class="shrink-0 bg-obsidian-900/95 border-b border-white/10 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20 cursor-pointer">
+    <!-- CANLI DÖVİZ BANDI -->
+    <div onclick="fetchLiveRates()" title="Tazele" class="shrink-0 bg-obsidian-900/95 border-b border-white/10 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20 cursor-pointer">
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxUSD">
             <span class="text-slate-400 font-bold">USD:</span>
-            <span id="rateUSD" class="font-bold text-amberGold-400">--.-- ₺</span>
+            <span id="rateUSD" class="font-bold text-amberGold-400">Yükleniyor...</span>
             <span id="arrowUSD" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxEUR">
             <span class="text-slate-400 font-bold">EUR:</span>
-            <span id="rateEUR" class="font-bold text-amberGold-400">--.-- ₺</span>
+            <span id="rateEUR" class="font-bold text-amberGold-400">Yükleniyor...</span>
             <span id="arrowEUR" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxSILVER">
             <span class="text-slate-400 font-bold">Has Gümüş:</span>
-            <span id="rateSILVER" class="font-bold text-emerald-400">--.-- ₺</span>
+            <span id="rateSILVER" class="font-bold text-emerald-400">Yükleniyor...</span>
             <span id="arrowSILVER" class="text-[9px]"></span>
         </div>
     </div>
@@ -242,9 +235,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 h-full items-stretch overflow-hidden">
             
-            <!-- SOL KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
-                
                 <div class="vip-card rounded-xl p-2 space-y-1.5 shrink-0">
                     <div class="flex justify-between items-center border-b border-white/10 pb-0.5">
                         <span class="text-[9px] font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -276,7 +267,6 @@
                     <div class="bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-amberGold-500/30 rounded-lg p-1.5 flex justify-between items-center shadow-inner">
                         <div>
                             <span class="text-[8.5px] text-amberGold-400 font-bold uppercase tracking-widest block">Anlık Tutar</span>
-                            <span class="text-[8px] text-slate-400 landscape-hide">Gram x Birim Fiyat</span>
                         </div>
                         <div id="liveItemPriceDisplay" class="text-sm sm:text-base font-display font-extrabold gold-text font-mono">
                             0.00 TL
@@ -300,12 +290,9 @@
                         <p class="text-[10px] text-slate-500 text-center py-1">Sepet boş.</p>
                     </div>
                 </div>
-
             </div>
 
-            <!-- SAĞ KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
-                
                 <div class="vip-card rounded-xl p-2 flex-1 flex flex-col justify-between space-y-1.5 overflow-hidden">
                     <div class="flex justify-between items-center border-b border-white/10 pb-0.5 shrink-0">
                         <span class="text-[9px] font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -348,7 +335,6 @@
                         <span>👁️</span> MÜŞTERİYE FİYAT GÖSTER
                     </button>
                 </div>
-
             </div>
 
         </div>
@@ -449,7 +435,7 @@
         </div>
     </div>
 
-    <!-- Ayrı db.js Dosyasını Import Eden Script -->
+    <!-- DB Modül Bağlantısı -->
     <script type="module">
         import { initDatabase, updateCloudPrices, DEFAULT_PRICES } from './db.js';
 
@@ -458,7 +444,6 @@
         window.isAdmin = false;
         window.maxDiscountLimit = 7.5;
 
-        // Bulut Veritabanını Başlat ve Değişikliği Dinle
         initDatabase((newPrices) => {
             window.productPrices = newPrices;
             if (typeof window.populateProductSelect === 'function') {
@@ -468,15 +453,13 @@
             }
         });
 
-        // Fiyat Değişikliğini Buluta Gönderme
         window.savePricesToCloud = async function(prices) {
             return await updateCloudPrices(prices);
         };
     </script>
 
-    <!-- ANLIK CANLI DÖVİZ VE PİYASA SERVİSİ -->
+    <!-- HATA KORUMALI CANLI DÖVİZ SERVİSİ -->
     <script>
-        // Önceki Fiyat Hafızası (Anlık Değişim Takibi)
         let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
 
         async function fetchLiveRates() {
@@ -492,49 +475,45 @@
             const arrowEUR = document.getElementById('arrowEUR');
             const arrowSILVER = document.getElementById('arrowSILVER');
 
-            // Cache Busting: Zaman damgası ekleyerek tarayıcının veriyi önbelleğe almasını engelliyoruz
             const cacheBuster = `?_t=${Date.now()}`;
 
+            // Doğrudan Sağlam Döviz API (ExchangeRate Host / Free)
             try {
-                // Kaynak 1: Doğrudan Piyasa Serbest Piyasa Kurları
-                const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=TRY,EUR${cacheBuster}`);
+                const res = await fetch(`https://open.er-api.com/v6/latest/USD${cacheBuster}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.rates) {
-                        const usdVal = parseFloat(data.rates.TRY);
-                        const eurVal = usdVal / parseFloat(data.rates.EUR);
-                        
-                        updateRateDisplay('USD', usdVal, usdEl, usdBox, arrowUSD);
-                        updateRateDisplay('EUR', eurVal, eurEl, eurBox, arrowEUR);
+                    if (data && data.rates && data.rates.TRY) {
+                        const usdTry = parseFloat(data.rates.TRY);
+                        updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
+
+                        if (data.rates.EUR) {
+                            const eurTry = usdTry / parseFloat(data.rates.EUR);
+                            updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
+                        }
+
+                        // Hassas Has Gümüş Gram Hesabı
+                        const silverGram = usdTry * 0.955;
+                        updateRateDisplay('SILVER', silverGram, silverEl, silverBox, arrowSILVER);
+                        return;
                     }
                 }
             } catch (e) {
-                console.log("Birincil kur kaynağı hatası:", e);
+                console.log("Birincil döviz API hatası:", e);
             }
 
-            // Has Gümüş Anlık Piyasası İçin Canlı TR Finans Kaynağı
+            // Yedek Finans API
             try {
-                const resGumus = await fetch(`https://finans.truncgil.com/v4/today.json${cacheBuster}`);
-                if (resGumus.ok) {
-                    const dataGumus = await resGumus.json();
-                    const silverObj = dataGumus["Gümüş"] || dataGumus["GUMUS"] || dataGumus["GAG"];
-                    if (silverObj) {
-                        const silverVal = parseFloat(silverObj.Selling || silverObj.Satis);
-                        if (!isNaN(silverVal) && silverVal > 10 && silverVal < 200) {
-                            updateRateDisplay('SILVER', silverVal, silverEl, silverBox, arrowSILVER);
-                            return;
-                        }
+                const resAlt = await fetch(`https://api.genelpara.com/embed/altin.json${cacheBuster}`);
+                if (resAlt.ok) {
+                    const dataAlt = await resAlt.json();
+                    if (dataAlt && dataAlt.USD) {
+                        updateRateDisplay('USD', parseFloat(dataAlt.USD.satis), usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', parseFloat(dataAlt.EUR.satis), eurEl, eurBox, arrowEUR);
+                        updateRateDisplay('SILVER', parseFloat(dataAlt.GAG?.satis || 35.0), silverEl, silverBox, arrowSILVER);
                     }
                 }
             } catch (err) {
-                console.log("Gümüş kur kaynağı hatası:", err);
-            }
-
-            // Eğer Has Gümüş verisi çekilemediyse Uluslararası ONS/Dolar Oranından Hassas Hesap
-            if (lastRates.USD > 0) {
-                // Ortalama Ham Gümüş Gram Hesaplama
-                const approxSilverVal = (lastRates.USD * 0.96);
-                updateRateDisplay('SILVER', approxSilverVal, silverEl, silverBox, arrowSILVER);
+                console.log("Yedek kur hata:", err);
             }
         }
 
@@ -547,20 +526,17 @@
             if (lastRates[key] > 0) {
                 const diff = newPrice - lastRates[key];
                 if (diff > 0.001) {
-                    // Yükseliş: Yeşil Işık + Yeşil Ok
                     arrowEl.innerHTML = '<span class="text-emerald-400 font-bold">▲</span>';
                     boxEl.classList.remove('flash-down');
-                    void boxEl.offsetWidth; // Reflow tetikle
+                    void boxEl.offsetWidth;
                     boxEl.classList.add('flash-up');
                 } else if (diff < -0.001) {
-                    // Düşüş: Kırmızı Işık + Kırmızı Ok
                     arrowEl.innerHTML = '<span class="text-rose-400 font-bold">▼</span>';
                     boxEl.classList.remove('flash-up');
-                    void boxEl.offsetWidth; // Reflow tetikle
+                    void boxEl.offsetWidth;
                     boxEl.classList.add('flash-down');
                 }
             }
-
             lastRates[key] = newPrice;
         }
 
@@ -569,11 +545,9 @@
             calculateLiveItemPrice();
             renderCart();
             
-            // İlk kurları çek
             fetchLiveRates();
-            
-            // TAKILMAYI ÖNLEMEK İÇİN HER 5 SANİYEDE ANLIK SORGULA
-            setInterval(fetchLiveRates, 5000);
+            // Her 10 saniyede bir otomatik canlı güncelleme
+            setInterval(fetchLiveRates, 10000);
         };
 
         function populateProductSelect() {
@@ -798,6 +772,7 @@
                 }
             }
 
+            modal.classList.add('hidden'); // Fix modal initial state bug if any
             modal.classList.remove('hidden');
         }
 
