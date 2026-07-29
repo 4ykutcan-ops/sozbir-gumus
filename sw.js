@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sozbir-gumus-vip-v90';
+const CACHE_NAME = 'sozbir-gumus-v1.0';
 const ASSETS = [
   './',
   './index.html',
