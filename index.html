@@ -182,11 +182,6 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <!-- Bulut Senkronizasyon Durumu Simgesi -->
-            <div id="cloudStatusIcon" title="Bulut Bağlantısı Aktif" class="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Canlı</span>
-            </div>
             <button onclick="toggleAdminModal()" id="adminBtn" class="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 text-[10px] font-semibold rounded-lg border border-white/10 flex items-center gap-1 active:scale-95">
                 <span>🔑</span> <span id="adminBtnText">Yönetici</span>
             </button>
@@ -408,141 +403,42 @@
         </div>
     </div>
 
-    <!-- GERÇEK VE TEK MERKEZLİ FİREBASE VERİTABANI ALTYAPISI -->
+    <!-- Ayrı db.js Dosyasını Import Eden Script -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { initDatabase, updateCloudPrices, DEFAULT_PRICES } from './db.js';
 
-        // Müşterek Sabit Ürün Kataloğu (Yedek)
-        const DEFAULT_PRICES = {
-            "Erkek Yüzük": 250,
-            "Erkek Zincir Künye": 350,
-            "Alyans": 350,
-            "Püskül": 280,
-            "Bayan Yüzük": 400,
-            "Bayan Bileklik": 400,
-            "Bayan Halhal": 400,
-            "Bayan Küpe": 400,
-            "Bayan Set": 400
-        };
-
-        // Tüm cihazların bağlandığı TEK MERKEZLİ Sabit Firebase Veritabanı Yapılandırması
-        const globalFirebaseConfig = {
-            apiKey: "AIzaSyB-DEFAULT_FIRESTORE_SHARED_KEY",
-            authDomain: "sozbir-gumus-global.firebaseapp.com",
-            projectId: "sozbir-gumus-global",
-            storageBucket: "sozbir-gumus-global.appspot.com",
-            messagingSenderId: "9876543210",
-            appId: "1:9876543210:web:1a2b3c4d5e6f"
-        };
-
-        // Eğer mevcut ortamda tanım varsa onu al, yoksa ortak global konfigürasyonu kullan
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : globalFirebaseConfig;
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        // TÜM CİHAZLAR İÇİN SABİT BULUT ODASI KİMLİĞİ (Farklı odalara düşmeyi engeller)
-        const SHARED_APP_ID = 'sozbir-gumus-shared-store';
-
-        window.productPrices = window.loadInitialPrices(DEFAULT_PRICES);
-
-        async function initGlobalCloudSync() {
-            try {
-                // Anonim Güvenli Oturum Açma
-                await signInAnonymously(auth);
-
-                // TÜM TELEFONLARI TEK BİR ORTAK ADRESE BAĞLA
-                // Yol: /artifacts/sozbir-gumus-shared-store/public/data/catalog/prices
-                const pricesDocRef = doc(db, 'artifacts', SHARED_APP_ID, 'public', 'data', 'catalog', 'prices');
-                
-                // Canlı Bulut Dinleyicisi (Bir telefondan değiştirilince tüm telefonlarda anında tetiklenir)
-                onSnapshot(pricesDocRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const cloudData = docSnap.data();
-                        if (cloudData && cloudData.prices && Object.keys(cloudData.prices).length > 0) {
-                            window.productPrices = { ...DEFAULT_PRICES, ...cloudData.prices };
-                            localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
-                            window.populateProductSelect();
-                            window.calculateLiveItemPrice();
-                            window.calculateTotal();
-                        }
-                    }
-                }, (error) => {
-                    console.log("Bulut dinleme durumu (Yerel veri aktif):", error);
-                });
-            } catch (err) {
-                console.log("Oturum / Veritabanı başlatma hatası:", err);
-            }
-        }
-
-        // Fiyatları Ortak Veritabanına Kaydetme Fonksiyonu
-        window.savePricesToCloud = async function(newPrices) {
-            try {
-                const pricesDocRef = doc(db, 'artifacts', SHARED_APP_ID, 'public', 'data', 'catalog', 'prices');
-                await setDoc(pricesDocRef, {
-                    prices: newPrices,
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-                return true;
-            } catch (err) {
-                console.log("Buluta fiyat kaydetme hatası:", err);
-                return false;
-            }
-        };
-
-        initGlobalCloudSync();
-    </script>
-
-    <!-- Uygulama Mantığı (DOM İşlemleri) -->
-    <script>
-        window.DEFAULT_PRICES = {
-            "Erkek Yüzük": 250,
-            "Erkek Zincir Künye": 350,
-            "Alyans": 350,
-            "Püskül": 280,
-            "Bayan Yüzük": 400,
-            "Bayan Bileklik": 400,
-            "Bayan Halhal": 400,
-            "Bayan Küpe": 400,
-            "Bayan Set": 400
-        };
-
-        window.loadInitialPrices = function(defaults) {
-            try {
-                const saved = localStorage.getItem('gumus_prices');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed && Object.keys(parsed).length > 0) {
-                        return { ...defaults, ...parsed };
-                    }
-                }
-            } catch(e) {
-                console.log("Lokal kayıt yükleme hatası:", e);
-            }
-            return { ...defaults };
-        };
-
-        window.productPrices = window.loadInitialPrices(window.DEFAULT_PRICES);
+        window.productPrices = { ...DEFAULT_PRICES };
         window.cart = [];
         window.isAdmin = false;
         window.maxDiscountLimit = 7.5;
 
+        // Bulut Veritabanını Başlat ve Değişikliği Dinle
+        initDatabase((newPrices) => {
+            window.productPrices = newPrices;
+            if (typeof window.populateProductSelect === 'function') {
+                window.populateProductSelect();
+                window.calculateLiveItemPrice();
+                window.calculateTotal();
+            }
+        });
+
+        // Fiyat Değişikliğini Buluta Gönderme
+        window.savePricesToCloud = async function(prices) {
+            return await updateCloudPrices(prices);
+        };
+    </script>
+
+    <!-- Uygulama Mantığı (DOM İşlemleri) -->
+    <script>
         window.onload = function() {
             populateProductSelect();
             calculateLiveItemPrice();
             renderCart();
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js?v=30').catch(err => console.log('SW Hata:', err));
-            }
         };
 
         function populateProductSelect() {
             const select = document.getElementById('productSelect');
-            if (!select) return;
+            if (!select || !window.productPrices) return;
             select.innerHTML = '';
             for (let name in window.productPrices) {
                 let opt = document.createElement('option');
@@ -554,7 +450,7 @@
 
         function calculateLiveItemPrice() {
             const selectEl = document.getElementById('productSelect');
-            if (!selectEl) return;
+            if (!selectEl || !window.productPrices) return;
             const selectedProduct = selectEl.value;
             const unitPrice = window.productPrices[selectedProduct] || 0;
             const gramInput = document.getElementById('gramInput');
@@ -728,7 +624,7 @@
             if (window.isAdmin) {
                 roleBadge.innerText = "Düzenlenebilir";
                 roleBadge.className = "text-[8.5px] px-1.5 py-0.5 rounded-full bg-amberGold-500/20 text-amberGold-300 font-bold border border-amberGold-500/30";
-                desc.innerText = "Gram fiyatlarını güncelleyebilirsiniz. Değişiklikler tüm cihazlarda anında geçerli olacaktır.";
+                desc.innerText = "Gram fiyatlarını güncelleyebilirsiniz. Güncellemeler tüm cihazlarda anında değişecektir.";
                 unlockBtn.classList.add('hidden');
                 saveBtn.classList.remove('hidden');
 
@@ -787,10 +683,9 @@
                 }
             }
             
-            // Yerel hafızaya kaydet
             localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
             
-            // Bulut Veritabanına Kaydet (Tüm telefonlarda anında senkronize olur)
+            // Buluta Kaydet (Ayrı db.js modülünü çağırır)
             if (typeof window.savePricesToCloud === 'function') {
                 await window.savePricesToCloud(window.productPrices);
             }
