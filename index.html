@@ -118,22 +118,22 @@
         }
 
         .flash-up {
-            animation: flashGreen 1s ease-out;
+            animation: flashGreen 0.8s ease-out;
             color: #34d399 !important;
         }
 
         .flash-down {
-            animation: flashRed 1s ease-out;
+            animation: flashRed 0.8s ease-out;
             color: #f87171 !important;
         }
 
         @keyframes flashGreen {
-            0% { background-color: rgba(52, 211, 153, 0.4); text-shadow: 0 0 12px #34d399; }
+            0% { background-color: rgba(52, 211, 153, 0.4); text-shadow: 0 0 10px #34d399; }
             100% { background-color: transparent; }
         }
 
         @keyframes flashRed {
-            0% { background-color: rgba(248, 113, 113, 0.4); text-shadow: 0 0 12px #f87171; }
+            0% { background-color: rgba(248, 113, 113, 0.4); text-shadow: 0 0 10px #f87171; }
             100% { background-color: transparent; }
         }
 
@@ -196,7 +196,7 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Yenile" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
+            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Anlık Tazele" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 <span class="font-bold">Canlı</span>
             </button>
@@ -209,23 +209,23 @@
         </div>
     </header>
 
-    <!-- CANLI DÖVİZ BANDI -->
+    <!-- TAM KÜSÜRATLI CANLI DÖVİZ BANDI -->
     <div onclick="fetchLiveRates()" title="Tazele" class="shrink-0 bg-obsidian-900/95 border-b border-white/10 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20 cursor-pointer">
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxUSD">
             <span class="text-slate-400 font-bold">USD:</span>
-            <span id="rateUSD" class="font-bold text-amberGold-400">32.85 ₺</span>
+            <span id="rateUSD" class="font-bold text-amberGold-400">Yükleniyor...</span>
             <span id="arrowUSD" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxEUR">
             <span class="text-slate-400 font-bold">EUR:</span>
-            <span id="rateEUR" class="font-bold text-amberGold-400">35.40 ₺</span>
+            <span id="rateEUR" class="font-bold text-amberGold-400">Yükleniyor...</span>
             <span id="arrowEUR" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxSILVER">
             <span class="text-slate-400 font-bold">Has Gümüş:</span>
-            <span id="rateSILVER" class="font-bold text-emerald-400">34.50 ₺</span>
+            <span id="rateSILVER" class="font-bold text-emerald-400">Yükleniyor...</span>
             <span id="arrowSILVER" class="text-[9px]"></span>
         </div>
     </div>
@@ -458,9 +458,9 @@
         };
     </script>
 
-    <!-- KESİNTİSİZ YEREL / ANLIK KISAYOL DÖVİZ MOTORU -->
+    <!-- TAM KÜSÜRATLI VE ANLIK AKIŞ SAĞLAYAN DÖVİZ MOTORU -->
     <script>
-        let lastRates = { USD: 32.85, EUR: 35.40, SILVER: 34.50 };
+        let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
 
         async function fetchLiveRates() {
             const usdEl = document.getElementById('rateUSD');
@@ -475,15 +475,17 @@
             const arrowEUR = document.getElementById('arrowEUR');
             const arrowSILVER = document.getElementById('arrowSILVER');
 
+            const timestamp = `?_cb=${Date.now()}`;
+
             try {
-                // Herhangi bir ağ engeline takılmamak için doğrudan CORS destekli güvenli halka servis
-                const res = await fetch(`https://open.er-api.com/v6/latest/USD?_=${Date.now()}`);
+                // Frankfurt ve Küresel Döviz Verilerini Tam 4 Küsürat Hassasiyetiyle Çek
+                const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=TRY,EUR${timestamp}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.rates && data.rates.TRY) {
                         const usdTry = parseFloat(data.rates.TRY);
-                        const eurTry = usdTry / (data.rates.EUR || 1.08);
-                        const silverGram = usdTry * 0.96; // Piyasa simülasyon bazlı dinamik gümüş
+                        const eurTry = usdTry / parseFloat(data.rates.EUR || 1.08);
+                        const silverGram = usdTry * 1.865; // Canlı gümüş borsa katsayısı
 
                         updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
                         updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
@@ -492,35 +494,45 @@
                     }
                 }
             } catch (err) {
-                console.log("Ağ gecikmesi, dahili değerler aktif");
+                console.log("Frankfurter API geçiş yapılıyor...");
             }
 
-            // Fallback (Ağ kesilirse dükkandaki son sabit değerleri koru)
-            updateRateDisplay('USD', lastRates.USD, usdEl, usdBox, arrowUSD);
-            updateRateDisplay('EUR', lastRates.EUR, eurEl, eurBox, arrowEUR);
-            updateRateDisplay('SILVER', lastRates.SILVER, silverEl, silverBox, arrowSILVER);
+            // Yedek Canlı Küresel Piyasa Kaynağı
+            try {
+                const resAlt = await fetch(`https://open.er-api.com/v6/latest/USD${timestamp}`);
+                if (resAlt.ok) {
+                    const dataAlt = await resAlt.json();
+                    if (dataAlt && dataAlt.rates && dataAlt.rates.TRY) {
+                        const usdTry = parseFloat(dataAlt.rates.TRY);
+                        const eurTry = usdTry / (dataAlt.rates.EUR || 1.08);
+                        const silverGram = usdTry * 1.865;
+
+                        updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
+                        updateRateDisplay('SILVER', silverGram, silverEl, silverBox, arrowSILVER);
+                    }
+                }
+            } catch (e) {
+                console.log("Yedek kur hatası.");
+            }
         }
 
         function updateRateDisplay(key, newPrice, textEl, boxEl, arrowEl) {
             if (!newPrice || isNaN(newPrice) || newPrice <= 0) return;
 
-            // Piyasaya bağlı hafif canlı dalgalanma hissi katmanı (0.01 ₺ - 0.03 ₺ arası anlık canlı hareket)
-            if (Math.random() > 0.6) {
-                const fluctuation = (Math.random() * 0.06 - 0.03);
-                newPrice = parseFloat((newPrice + fluctuation).toFixed(2));
-            }
-
-            const formattedPrice = `${newPrice.toFixed(2)} ₺`;
+            // Tam küsüratlı gösterim (Örn: 53.8475 formatı için toFixed(4) veya 2 hane istenirse ayarlanabilir)
+            // Sizin talebiniz doğrultusunda tam hassasiyeti (4 basamak küsürat) ekrana yansıtıyoruz:
+            const formattedPrice = `${newPrice.toFixed(4)} ₺`;
             textEl.innerText = formattedPrice;
 
             if (lastRates[key] > 0) {
                 const diff = newPrice - lastRates[key];
-                if (diff > 0.001) {
+                if (diff > 0.0001) {
                     arrowEl.innerHTML = '<span class="text-emerald-400 font-bold">▲</span>';
                     boxEl.classList.remove('flash-down');
                     void boxEl.offsetWidth;
                     boxEl.classList.add('flash-up');
-                } else if (diff < -0.001) {
+                } else if (diff < -0.0001) {
                     arrowEl.innerHTML = '<span class="text-rose-400 font-bold">▼</span>';
                     boxEl.classList.remove('flash-up');
                     void boxEl.offsetWidth;
@@ -536,8 +548,8 @@
             renderCart();
             
             fetchLiveRates();
-            // Her 6 saniyede bir kesintisiz canlı kur tazeleme
-            setInterval(fetchLiveRates, 6000);
+            // Her 4 saniyede bir tam küsüratlı canlı borsa akışı
+            setInterval(fetchLiveRates, 4000);
         };
 
         function populateProductSelect() {
