@@ -117,6 +117,27 @@
             }
         }
 
+        /* DÖVİZ DEĞİŞİM ANİMASYONLARI (YEŞİL / KIRMIZI PARLAMA) */
+        .flash-up {
+            animation: flashGreen 1.2s ease-out;
+            color: #34d399 !important;
+        }
+
+        .flash-down {
+            animation: flashRed 1.2s ease-out;
+            color: #f87171 !important;
+        }
+
+        @keyframes flashGreen {
+            0% { background-color: rgba(52, 211, 153, 0.35); text-shadow: 0 0 10px #34d399; }
+            100% { background-color: transparent; }
+        }
+
+        @keyframes flashRed {
+            0% { background-color: rgba(248, 113, 113, 0.35); text-shadow: 0 0 10px #f87171; }
+            100% { background-color: transparent; }
+        }
+
         .vip-input {
             background: rgba(3, 7, 18, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -196,21 +217,24 @@
         </div>
     </header>
 
-    <!-- CANLI DÖVİZ VE PİYASA BANT ŞERİDİ -->
+    <!-- CANLI DÖVİZ VE HAS GÜMÜŞ BANT ŞERİDİ (ANLIK YEŞİL / KIRMIZI ANİMASYONLU) -->
     <div class="shrink-0 bg-obsidian-900/90 border-b border-white/5 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20">
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxUSD">
             <span class="text-slate-400 font-bold">USD:</span>
-            <span id="rateUSD" class="text-amberGold-400 font-bold">--.-- ₺</span>
+            <span id="rateUSD" class="font-bold text-amberGold-400">--.-- ₺</span>
+            <span id="arrowUSD" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxEUR">
             <span class="text-slate-400 font-bold">EUR:</span>
-            <span id="rateEUR" class="text-amberGold-400 font-bold">--.-- ₺</span>
+            <span id="rateEUR" class="font-bold text-amberGold-400">--.-- ₺</span>
+            <span id="arrowEUR" class="text-[9px]"></span>
         </div>
         <div class="border-r border-white/10 h-3"></div>
-        <div class="flex items-center gap-1">
-            <span class="text-slate-400 font-bold">Ham Gümüş (gr):</span>
-            <span id="rateSILVER" class="text-emerald-400 font-bold">--.-- ₺</span>
+        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxSILVER">
+            <span class="text-slate-400 font-bold">Has Gümüş:</span>
+            <span id="rateSILVER" class="font-bold text-emerald-400">--.-- ₺</span>
+            <span id="arrowSILVER" class="text-[9px]"></span>
         </div>
     </div>
 
@@ -451,69 +475,100 @@
         };
     </script>
 
-    <!-- Uygulama Mantığı ve Canlı Döviz Servisi -->
+    <!-- Uygulama Mantığı ve Anlık Canlı Döviz Servisi -->
     <script>
-        // CANLI DÖVİZ VE PİYASA FİYATI ÇEKME FONKSİYONU
+        // Önceki Fiyat Hafızası (Anlık Yeşil / Kırmızı Takibi İçin)
+        let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
+
         async function fetchLiveRates() {
             const usdEl = document.getElementById('rateUSD');
             const eurEl = document.getElementById('rateEUR');
             const silverEl = document.getElementById('rateSILVER');
 
+            const usdBox = document.getElementById('boxUSD');
+            const eurBox = document.getElementById('boxEUR');
+            const silverBox = document.getElementById('boxSILVER');
+
+            const arrowUSD = document.getElementById('arrowUSD');
+            const arrowEUR = document.getElementById('arrowEUR');
+            const arrowSILVER = document.getElementById('arrowSILVER');
+
             try {
-                // Türkiye piyasası canlı finans API'sinden veri çek
-                const res = await fetch('https://finans.truncgil.com/v4/today.json');
+                // Türkiye Finans Anlık Kur Servisi
+                const res = await fetch('https://api.genelpara.com/embed/altin.json');
                 if (res.ok) {
                     const data = await res.json();
                     
-                    if (data && data.USD) {
-                        usdEl.innerText = `${parseFloat(data.USD.Selling || data.USD.Satis).toFixed(2)} ₺`;
+                    if (data) {
+                        updateRateDisplay('USD', parseFloat(data.USD?.satis || 0), usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', parseFloat(data.EUR?.satis || 0), eurEl, eurBox, arrowEUR);
+                        updateRateDisplay('SILVER', parseFloat(data.GAG?.satis || 0), silverEl, silverBox, arrowSILVER);
+                        return;
                     }
-                    if (data && data.EUR) {
-                        eurEl.innerText = `${parseFloat(data.EUR.Selling || data.EUR.Satis).toFixed(2)} ₺`;
-                    }
-                    if (data && (data["Gümüş"] || data["GUMUS"])) {
-                        const silverObj = data["Gümüş"] || data["GUMUS"];
-                        silverEl.innerText = `${parseFloat(silverObj.Selling || silverObj.Satis).toFixed(2)} ₺`;
-                    } else {
-                        // Yedek Ham Gümüş Hesabı
-                        fetchFallbackExchangeRates();
-                    }
-                    return;
                 }
             } catch (err) {
-                console.log("Birincil Finans API baglanti hatasi, yedek API deneniyor:", err);
+                // Birincil kaynak ulaşılamazsa ikincil canlı kur servisi
             }
 
-            // Birincil API basarisiz olursa Yedek Uluslararası API
-            fetchFallbackExchangeRates();
+            fetchFallbackRates();
         }
 
-        async function fetchFallbackExchangeRates() {
+        async function fetchFallbackRates() {
             const usdEl = document.getElementById('rateUSD');
             const eurEl = document.getElementById('rateEUR');
             const silverEl = document.getElementById('rateSILVER');
 
+            const usdBox = document.getElementById('boxUSD');
+            const eurBox = document.getElementById('boxEUR');
+            const silverBox = document.getElementById('boxSILVER');
+
+            const arrowUSD = document.getElementById('arrowUSD');
+            const arrowEUR = document.getElementById('arrowEUR');
+            const arrowSILVER = document.getElementById('arrowSILVER');
+
             try {
-                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const res = await fetch('https://finans.truncgil.com/v4/today.json');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.rates && data.rates.TRY) {
-                        const usdTry = data.rates.TRY;
-                        usdEl.innerText = `${usdTry.toFixed(2)} ₺`;
+                    if (data) {
+                        if (data.USD) updateRateDisplay('USD', parseFloat(data.USD.Selling || data.USD.Satis), usdEl, usdBox, arrowUSD);
+                        if (data.EUR) updateRateDisplay('EUR', parseFloat(data.EUR.Selling || data.EUR.Satis), eurEl, eurBox, arrowEUR);
                         
-                        if (data.rates.EUR) {
-                            const eurTry = usdTry / data.rates.EUR;
-                            eurEl.innerText = `${eurTry.toFixed(2)} ₺`;
+                        const silverObj = data["Gümüş"] || data["GUMUS"] || data["GAG"];
+                        if (silverObj) {
+                            updateRateDisplay('SILVER', parseFloat(silverObj.Selling || silverObj.Satis), silverEl, silverBox, arrowSILVER);
                         }
-                        
-                        // Ham gümüş ortalama gr tahmini piyasa değeri
-                        const approxSilverGram = (usdTry * 0.95);
-                        silverEl.innerText = `~${approxSilverGram.toFixed(2)} ₺`;
                     }
                 }
-            } catch (e) {
-                console.log("Yedek kur API hatasi:", e);
+            } catch(e) {
+                console.log("Kur güncelleme hatası:", e);
             }
+        }
+
+        // Fiyat Değişimini Hesaplama ve Yeşil/Kırmızı Animasyon Uygulama
+        function updateRateDisplay(key, newPrice, textEl, boxEl, arrowEl) {
+            if (!newPrice || newPrice <= 0) return;
+
+            const formattedPrice = `${newPrice.toFixed(2)} ₺`;
+            textEl.innerText = formattedPrice;
+
+            if (lastRates[key] > 0) {
+                if (newPrice > lastRates[key]) {
+                    // Fiyat Yükseldi -> Yeşil Flash & Yukarı Ok
+                    arrowEl.innerHTML = '<span class="text-emerald-400 font-bold">▲</span>';
+                    boxEl.classList.remove('flash-down');
+                    void boxEl.offsetWidth; // Reflow reset
+                    boxEl.classList.add('flash-up');
+                } else if (newPrice < lastRates[key]) {
+                    // Fiyat Düştü -> Kırmızı Flash & Aşağı Ok
+                    arrowEl.innerHTML = '<span class="text-rose-400 font-bold">▼</span>';
+                    boxEl.classList.remove('flash-up');
+                    void boxEl.offsetWidth; // Reflow reset
+                    boxEl.classList.add('flash-down');
+                }
+            }
+
+            lastRates[key] = newPrice;
         }
 
         window.onload = function() {
@@ -521,9 +576,10 @@
             calculateLiveItemPrice();
             renderCart();
             
-            // Canlı kurları çek ve her 30 saniyede bir otomatik tazele
+            // İlk açılışta canlı kurları al
             fetchLiveRates();
-            setInterval(fetchLiveRates, 30000);
+            // ANLIK TAKİP İÇİN 5 SANİYEDE BİR OTO-SORGULA
+            setInterval(fetchLiveRates, 5000);
         };
 
         function populateProductSelect() {
