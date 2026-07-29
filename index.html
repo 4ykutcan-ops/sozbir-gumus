@@ -435,31 +435,111 @@
         </div>
     </div>
 
-    <!-- DB Modül Bağlantısı -->
+    <!-- Firebase SDK Entegrasyonu (Tek Dosya İçinde Bulut Senkronizasyonu) -->
     <script type="module">
-        import { initDatabase, updateCloudPrices, DEFAULT_PRICES } from './db.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        window.productPrices = { ...DEFAULT_PRICES };
+        const DEFAULT_PRICES = {
+            "Erkek Yüzük": 250,
+            "Erkek Zincir Künye": 350,
+            "Alyans": 350,
+            "Püskül": 280,
+            "Bayan Yüzük": 400,
+            "Bayan Bileklik": 400,
+            "Bayan Halhal": 400,
+            "Bayan Küpe": 400,
+            "Bayan Set": 400
+        };
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-SOZBIR_GUMUS_SHARED_DB",
+            authDomain: "sozbir-gumus-live.firebaseapp.com",
+            projectId: "sozbir-gumus-live",
+            storageBucket: "sozbir-gumus-live.appspot.com",
+            messagingSenderId: "10987654321",
+            appId: "1:10987654321:web:sozbir001"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const SHARED_APP_ID = 'sozbir-gumus-shared-store';
+        const PRICE_DOC = doc(db, 'artifacts', SHARED_APP_ID, 'public', 'data', 'catalog', 'prices');
+
+        window.productPrices = window.loadInitialPrices ? window.loadInitialPrices(DEFAULT_PRICES) : { ...DEFAULT_PRICES };
         window.cart = [];
         window.isAdmin = false;
         window.maxDiscountLimit = 7.5;
 
-        initDatabase((newPrices) => {
-            window.productPrices = newPrices;
-            if (typeof window.populateProductSelect === 'function') {
-                window.populateProductSelect();
-                window.calculateLiveItemPrice();
-                window.calculateTotal();
+        async function initCloudSync() {
+            try {
+                await signInAnonymously(auth);
+                onSnapshot(PRICE_DOC, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data && data.prices) {
+                            window.productPrices = { ...DEFAULT_PRICES, ...data.prices };
+                            localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
+                            if (typeof window.populateProductSelect === 'function') {
+                                window.populateProductSelect();
+                                window.calculateLiveItemPrice();
+                                window.calculateTotal();
+                            }
+                        }
+                    }
+                }, (error) => {
+                    console.log("Bulut senkronizasyon pasif, yerel veriler kullanılıyor.");
+                });
+            } catch (err) {
+                console.log("Bulut bağlantı hatası:", err);
             }
-        });
+        }
 
         window.savePricesToCloud = async function(prices) {
-            return await updateCloudPrices(prices);
+            try {
+                await setDoc(PRICE_DOC, {
+                    prices: prices,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                return true;
+            } catch (err) {
+                return false;
+            }
         };
+
+        initCloudSync();
     </script>
 
-    <!-- HATA KORUMALI CANLI DÖVİZ SERVİSİ -->
+    <!-- Uygulama Mantığı ve Canlı Döviz Motoru -->
     <script>
+        window.DEFAULT_PRICES = {
+            "Erkek Yüzük": 250,
+            "Erkek Zincir Künye": 350,
+            "Alyans": 350,
+            "Püskül": 280,
+            "Bayan Yüzük": 400,
+            "Bayan Bileklik": 400,
+            "Bayan Halhal": 400,
+            "Bayan Küpe": 400,
+            "Bayan Set": 400
+        };
+
+        window.loadInitialPrices = function(defaults) {
+            try {
+                const saved = localStorage.getItem('gumus_prices');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        return { ...defaults, ...parsed };
+                    }
+                }
+            } catch(e) {}
+            return { ...defaults };
+        };
+
+        window.productPrices = window.loadInitialPrices(window.DEFAULT_PRICES);
         let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
 
         async function fetchLiveRates() {
@@ -477,51 +557,38 @@
 
             const cacheBuster = `?_t=${Date.now()}`;
 
-            // Doğrudan Sağlam Döviz API (ExchangeRate Host / Free)
             try {
-                const res = await fetch(`https://open.er-api.com/v6/latest/USD${cacheBuster}`);
+                const res = await fetch(`https://api.genelpara.com/embed/altin.json${cacheBuster}`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.rates && data.rates.TRY) {
-                        const usdTry = parseFloat(data.rates.TRY);
-                        updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
-
-                        if (data.rates.EUR) {
-                            const eurTry = usdTry / parseFloat(data.rates.EUR);
-                            updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
-                        }
-
-                        // Hassas Has Gümüş Gram Hesabı
-                        const silverGram = usdTry * 0.955;
-                        updateRateDisplay('SILVER', silverGram, silverEl, silverBox, arrowSILVER);
+                    if (data && data.USD) {
+                        updateRateDisplay('USD', parseFloat(data.USD.satis), usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', parseFloat(data.EUR.satis), eurEl, eurBox, arrowEUR);
+                        updateRateDisplay('SILVER', parseFloat(data.GAG?.satis || 38.5), silverEl, silverBox, arrowSILVER);
                         return;
                     }
                 }
-            } catch (e) {
-                console.log("Birincil döviz API hatası:", e);
-            }
+            } catch (e) {}
 
-            // Yedek Finans API
             try {
-                const resAlt = await fetch(`https://api.genelpara.com/embed/altin.json${cacheBuster}`);
+                const resAlt = await fetch(`https://finans.truncgil.com/v4/today.json${cacheBuster}`);
                 if (resAlt.ok) {
                     const dataAlt = await resAlt.json();
                     if (dataAlt && dataAlt.USD) {
-                        updateRateDisplay('USD', parseFloat(dataAlt.USD.satis), usdEl, usdBox, arrowUSD);
-                        updateRateDisplay('EUR', parseFloat(dataAlt.EUR.satis), eurEl, eurBox, arrowEUR);
-                        updateRateDisplay('SILVER', parseFloat(dataAlt.GAG?.satis || 35.0), silverEl, silverBox, arrowSILVER);
+                        updateRateDisplay('USD', parseFloat(dataAlt.USD.Selling || dataAlt.USD.Satis), usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', parseFloat(dataAlt.EUR.Selling || dataAlt.EUR.Satis), eurEl, eurBox, arrowEUR);
+                        const silverObj = dataAlt["Gümüş"] || dataAlt["GUMUS"] || dataAlt["GAG"];
+                        if (silverObj) {
+                            updateRateDisplay('SILVER', parseFloat(silverObj.Selling || silverObj.Satis), silverEl, silverBox, arrowSILVER);
+                        }
                     }
                 }
-            } catch (err) {
-                console.log("Yedek kur hata:", err);
-            }
+            } catch (err) {}
         }
 
         function updateRateDisplay(key, newPrice, textEl, boxEl, arrowEl) {
             if (!newPrice || isNaN(newPrice) || newPrice <= 0) return;
-
-            const formattedPrice = `${newPrice.toFixed(2)} ₺`;
-            textEl.innerText = formattedPrice;
+            textEl.innerText = `${newPrice.toFixed(2)} ₺`;
 
             if (lastRates[key] > 0) {
                 const diff = newPrice - lastRates[key];
@@ -546,7 +613,6 @@
             renderCart();
             
             fetchLiveRates();
-            // Her 10 saniyede bir otomatik canlı güncelleme
             setInterval(fetchLiveRates, 10000);
         };
 
@@ -571,7 +637,6 @@
             const gram = parseFloat(gramInput.value) || 0;
 
             document.getElementById('unitPriceDisplay').innerText = `${unitPrice} TL / gr`;
-
             const itemTotalPrice = gram * unitPrice;
             document.getElementById('liveItemPriceDisplay').innerText = `${itemTotalPrice.toFixed(2)} TL`;
         }
@@ -721,7 +786,7 @@
                 toggleAdminModal();
                 calculateTotal();
             } else {
-                document.getElementById('adminAuthError').classList.remove('hidden');
+                document.getElementById('adminAuthError').classList.add('hidden');
             }
         }
 
@@ -772,7 +837,6 @@
                 }
             }
 
-            modal.classList.add('hidden'); // Fix modal initial state bug if any
             modal.classList.remove('hidden');
         }
 
