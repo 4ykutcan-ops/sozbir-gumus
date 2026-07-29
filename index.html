@@ -426,7 +426,20 @@
         import { getAuth, signInWithCustomToken, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Firebase Yapılandırması ve Başlatma
+        // Varsayılan Sabit Ürün Kataloğu (Yedek Güvence)
+        const DEFAULT_PRICES = {
+            "Erkek Yüzük": 250,
+            "Erkek Zincir Künye": 350,
+            "Alyans": 350,
+            "Püskül": 280,
+            "Bayan Yüzük": 400,
+            "Bayan Bileklik": 400,
+            "Bayan Halhal": 400,
+            "Bayan Küpe": 400,
+            "Bayan Set": 400
+        };
+
+        // Firebase Yapılandırması
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "",
             authDomain: "sozbir-gumus.firebaseapp.com",
@@ -441,24 +454,9 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sozbir-gumus-app';
 
-        // Varsayılan Gram Fiyat Kataloğu
-        window.productPrices = {
-            "Erkek Yüzük": 250,
-            "Erkek Zincir Künye": 350,
-            "Alyans": 350,
-            "Püskül": 280,
-            "Bayan Yüzük": 400,
-            "Bayan Bileklik": 400,
-            "Bayan Halhal": 400,
-            "Bayan Küpe": 400,
-            "Bayan Set": 400
-        };
+        // Başlangıç Fiyatlarını Güvenli Yükleme
+        window.productPrices = window.loadInitialPrices(DEFAULT_PRICES);
 
-        window.cart = [];
-        window.isAdmin = false;
-        window.maxDiscountLimit = 7.5;
-
-        // Firebase Kimlik Doğrulama ve Canlı Senkronizasyon Dinleyicisi
         async function initCloudSync() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -467,28 +465,27 @@
                     await signInAnonymously(auth);
                 }
 
-                // Buluttaki fiyat değişikliklerini CANLI DİNLE (Tüm cihazlarda aynı anda güncellenir)
+                // Buluttaki fiyat değişikliklerini canlı dinleme
                 const pricesDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'prices');
                 onSnapshot(pricesDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
-                        if (cloudData && cloudData.prices) {
-                            window.productPrices = cloudData.prices;
-                            localStorage.setItem('gumus_prices', JSON.stringify(cloudData.prices));
+                        if (cloudData && cloudData.prices && Object.keys(cloudData.prices).length > 0) {
+                            window.productPrices = { ...DEFAULT_PRICES, ...cloudData.prices };
+                            localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
                             window.populateProductSelect();
                             window.calculateLiveItemPrice();
                             window.calculateTotal();
                         }
                     }
                 }, (error) => {
-                    console.log("Bulut dinleme hatası (Çevrimdışı moda geçildi):", error);
+                    console.log("Bulut dinleme hatası (Yerel fiyatlar aktif):", error);
                 });
             } catch (err) {
-                console.log("Kimlik doğrulama veya bulut hatası:", err);
+                console.log("Kimlik doğrulama hatası:", err);
             }
         }
 
-        // Buluta Fiyat Kaydetme Fonksiyonu
         window.savePricesToCloud = async function(newPrices) {
             try {
                 const pricesDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'prices');
@@ -506,19 +503,45 @@
 
     <!-- Uygulama Mantığı (DOM İşlemleri) -->
     <script>
-        window.onload = function() {
-            const savedPrices = localStorage.getItem('gumus_prices');
-            if(savedPrices) {
-                window.productPrices = JSON.parse(savedPrices);
+        window.DEFAULT_PRICES = {
+            "Erkek Yüzük": 250,
+            "Erkek Zincir Künye": 350,
+            "Alyans": 350,
+            "Püskül": 280,
+            "Bayan Yüzük": 400,
+            "Bayan Bileklik": 400,
+            "Bayan Halhal": 400,
+            "Bayan Küpe": 400,
+            "Bayan Set": 400
+        };
+
+        window.loadInitialPrices = function(defaults) {
+            try {
+                const saved = localStorage.getItem('gumus_prices');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        return { ...defaults, ...parsed };
+                    }
+                }
+            } catch(e) {
+                console.log("Kayıt okuma hatası:", e);
             }
+            return { ...defaults };
+        };
+
+        window.productPrices = window.loadInitialPrices(window.DEFAULT_PRICES);
+        window.cart = [];
+        window.isAdmin = false;
+        window.maxDiscountLimit = 7.5;
+
+        window.onload = function() {
             populateProductSelect();
             calculateLiveItemPrice();
             renderCart();
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js?v=2026_02').then(reg => {
-                    reg.update();
-                }).catch(err => console.log('SW Hata:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Hata:', err));
             }
         };
 
@@ -678,7 +701,6 @@
             modal.classList.toggle('hidden');
         }
 
-        // Güncellenmiş Yönetici Şifre Doğrulaması (sözbir2026)
         function authenticateAdmin() {
             const pass = document.getElementById('adminPasswordInput').value;
             if (pass === "sözbir2026") {
@@ -770,10 +792,8 @@
                 }
             }
             
-            // Yerel hafızaya kaydet
             localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
             
-            // Buluta kaydet (Diğer tüm telefonlara anında senkronize olur)
             if (typeof window.savePricesToCloud === 'function') {
                 await window.savePricesToCloud(window.productPrices);
             }
