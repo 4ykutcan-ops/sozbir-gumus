@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sozbir-gumus-instant-v50';
+const CACHE_NAME = 'sozbir-gumus-vip-v60';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,6 @@ const ASSETS = [
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap'
 ];
 
-// Yükleme anında yeni sürümü hemen aktif et
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -18,7 +17,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Eski önbelleklerin tamamını anında temizle
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -33,15 +31,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-First Stratejisi: Önce ağdan en yeni dosyayı çek, internet yoksa önbellekten sun
 self.addEventListener('fetch', (event) => {
-  // Sadece GET isteklerini işle
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        // Ağdan başarılı cevap geldiyse önbelleği de güncelle
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -51,7 +46,6 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        // İnternet yoksa önbellekten dükkanda çalışmaya devam et
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
