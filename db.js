@@ -3,15 +3,17 @@ import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/1
 import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
 export const DEFAULT_PRICES = {
-    "Erkek Yüzük": 250,
-    "Erkek Zincir Künye": 350,
+    "Erkek Yüzük": 300,
+    "İthal Erkek Zincir Künye": 350,
+    "Erkek Zincir Künye": 300,
     "Alyans": 350,
-    "Püskül": 280,
-    "Bayan Yüzük": 400,
-    "Bayan Bileklik": 400,
-    "Bayan Halhal": 400,
-    "Bayan Küpe": 400,
-    "Bayan Set": 400
+    "Püskül": 350,
+    "Bayan Yüzük": 450,
+    "Bayan Bileklik": 450,
+    "Bayan Halhal": 450,
+    "Bayan Küpe": 450,
+    "Bayan Set": 450,
+    "Damla Kehribar": 400
 };
 
 const firebaseConfig = {
