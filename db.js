@@ -2,22 +2,18 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-// Varsayılan Sabit Katalog
 export const DEFAULT_PRICES = {
-    "Erkek Yüzük": 300,
-    "Erkek Zincir Künye": 300,
-    "İthal Erkek Zincir Künye": 350,
+    "Erkek Yüzük": 250,
+    "Erkek Zincir Künye": 350,
     "Alyans": 350,
-    "Püskül": 350,
-    "Bayan Yüzük": 450,
-    "Bayan Bileklik": 450,
-    "Bayan Halhal": 450,
-    "Bayan Küpe": 450,
-    "Bayan Set": 450,
-    "Damla Kehribar": 400
+    "Püskül": 280,
+    "Bayan Yüzük": 400,
+    "Bayan Bileklik": 400,
+    "Bayan Halhal": 400,
+    "Bayan Küpe": 400,
+    "Bayan Set": 400
 };
 
-// Sabit Ortak Firebase Projesi (Her telefon buraya baglanir)
 const firebaseConfig = {
     apiKey: "AIzaSyD-SOZBIR_GUMUS_SHARED_DB",
     authDomain: "sozbir-gumus-live.firebaseapp.com",
@@ -34,12 +30,9 @@ const db = getFirestore(app);
 const APP_ID = 'sozbir-app-v1';
 const PRICE_DOC = doc(db, 'artifacts', APP_ID, 'public', 'data', 'catalog', 'prices');
 
-// Bulut Dinleyicisini Başlat
 export async function initDatabase(onPriceUpdate) {
     try {
         await signInAnonymously(auth);
-        
-        // Firestore Canlı Dinleme (Real-time Listener)
         onSnapshot(PRICE_DOC, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
@@ -50,10 +43,8 @@ export async function initDatabase(onPriceUpdate) {
                     return;
                 }
             }
-            // Veri yoksa varsayılanları yükle
             onPriceUpdate(DEFAULT_PRICES);
         }, (error) => {
-            console.log("Bulut dinleme uyarisi (Çevrimdışı moda geçildi):", error);
             const saved = localStorage.getItem('gumus_prices');
             if (saved) {
                 try { onPriceUpdate(JSON.parse(saved)); } catch(e) { onPriceUpdate(DEFAULT_PRICES); }
@@ -62,11 +53,10 @@ export async function initDatabase(onPriceUpdate) {
             }
         });
     } catch (err) {
-        console.log("Auth hatasi:", err);
+        console.log("DB Hatası:", err);
     }
 }
 
-// Buluta Fiyat Yazma
 export async function updateCloudPrices(newPrices) {
     try {
         await setDoc(PRICE_DOC, {
@@ -75,7 +65,6 @@ export async function updateCloudPrices(newPrices) {
         }, { merge: true });
         return true;
     } catch (err) {
-        console.error("Bulut kayit hatasi:", err);
         return false;
     }
 }
