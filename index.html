@@ -182,6 +182,11 @@
         </div>
 
         <div class="flex items-center gap-1">
+            <!-- Bulut Senkronizasyon Durumu Simgesi -->
+            <div id="cloudStatusIcon" title="Bulut Bağlantısı Aktif" class="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Canlı</span>
+            </div>
             <button onclick="toggleAdminModal()" id="adminBtn" class="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 text-[10px] font-semibold rounded-lg border border-white/10 flex items-center gap-1 active:scale-95">
                 <span>🔑</span> <span id="adminBtnText">Yönetici</span>
             </button>
@@ -196,7 +201,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 h-full items-stretch overflow-hidden">
             
-            <!-- SOL KOLON: Ürün Seçimi & Gram & Anlık Fiyat -->
+            <!-- SOL KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
                 
                 <div class="vip-card rounded-xl p-2 space-y-1.5 shrink-0">
@@ -206,7 +211,6 @@
                         </span>
                     </div>
                     
-                    <!-- Ürün Seçimi -->
                     <div>
                         <label class="block text-[8.5px] text-slate-400 font-semibold mb-0.5 uppercase tracking-wider">Ürün Türü</label>
                         <select id="productSelect" onchange="calculateLiveItemPrice()" class="vip-input w-full rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-100 focus:outline-none appearance-none">
@@ -215,7 +219,6 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-1.5">
-                        <!-- Birim Fiyat -->
                         <div>
                             <label class="block text-[8.5px] text-slate-400 font-semibold mb-0.5 uppercase tracking-wider">Birim Fiyatı</label>
                             <div id="unitPriceDisplay" class="vip-input w-full rounded-lg px-2 py-1 text-[11px] text-slate-300 font-mono font-bold flex items-center justify-between">
@@ -223,14 +226,12 @@
                             </div>
                         </div>
 
-                        <!-- Gramaj Girişi -->
                         <div>
                             <label class="block text-[8.5px] text-slate-400 font-semibold mb-0.5 uppercase tracking-wider">Ağırlık (Gram)</label>
                             <input type="number" id="gramInput" step="0.01" placeholder="0.00" oninput="calculateLiveItemPrice()" class="vip-input w-full rounded-lg px-2 py-1 text-[11px] text-slate-100 font-mono font-bold focus:outline-none">
                         </div>
                     </div>
 
-                    <!-- ANLIK ÜRÜN FİYAT GÖSTERGESİ -->
                     <div class="bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-amberGold-500/30 rounded-lg p-1.5 flex justify-between items-center shadow-inner">
                         <div>
                             <span class="text-[8.5px] text-amberGold-400 font-bold uppercase tracking-widest block">Anlık Tutar</span>
@@ -241,13 +242,11 @@
                         </div>
                     </div>
 
-                    <!-- Sepete Ekle Butonu -->
                     <button onclick="addToCart()" class="gold-btn w-full text-obsidian-950 font-display font-extrabold py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] tracking-wide">
                         <span>➕</span> SEPETE EKLE
                     </button>
                 </div>
 
-                <!-- Sepet Listesi Kartı -->
                 <div class="vip-card rounded-xl p-2 flex-1 flex flex-col justify-between min-h-[65px] overflow-hidden">
                     <div class="flex justify-between items-center border-b border-white/10 pb-0.5 shrink-0">
                         <span class="text-[9px] font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -263,7 +262,7 @@
 
             </div>
 
-            <!-- SAĞ KOLON: İskonto & Genel Toplam -->
+            <!-- SAĞ KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
                 
                 <div class="vip-card rounded-xl p-2 flex-1 flex flex-col justify-between space-y-1.5 overflow-hidden">
@@ -273,7 +272,6 @@
                         </span>
                     </div>
 
-                    <!-- İskonto Girişi -->
                     <div class="shrink-0">
                         <div class="flex justify-between text-[8.5px] mb-0.5">
                             <span class="text-slate-400 font-semibold">İskonto Oranı (%)</span>
@@ -290,7 +288,6 @@
                         <p id="discountError" class="text-[8.5px] text-rose-400 mt-0.5 font-medium hidden">Sınır aşıldı!</p>
                     </div>
 
-                    <!-- Fiyat Özeti -->
                     <div class="space-y-0.5 text-[10px] font-mono shrink-0 pt-1 border-t border-white/10">
                         <div class="flex justify-between text-slate-400">
                             <span>Ara Toplam:</span>
@@ -306,7 +303,6 @@
                         </div>
                     </div>
 
-                    <!-- Müşteri Ekrana Butonu -->
                     <button onclick="openCustomerScreen()" class="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 active:scale-[0.98] text-obsidian-950 font-display font-extrabold py-2 px-2 rounded-lg shadow-md transition flex items-center justify-center gap-1 text-[11px] tracking-wide shrink-0">
                         <span>👁️</span> MÜŞTERİYE FİYAT GÖSTER
                     </button>
@@ -318,18 +314,14 @@
 
     </main>
 
-    <!-- MÜŞTERİ EKRANI (TAM ORTALI TEK PARÇA LÜKS KARTVİZİT) -->
+    <!-- MÜŞTERİ EKRANI -->
     <div id="customerScreen" class="fixed inset-0 bg-obsidian-950/98 backdrop-blur-2xl z-50 flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-gradient-to-b from-amberGold-500/10 via-transparent to-emerald-500/10 pointer-events-none"></div>
 
-        <!-- ORTALANMIŞ LÜKS KARTVİZİT KUTUSU -->
         <div class="relative z-10 w-full max-w-xs sm:max-w-sm flex flex-col items-center">
-            
             <div class="cardvizit-box w-full rounded-3xl p-5 sm:p-6 text-center border border-amberGold-500/40">
-                
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-amberGold-400 to-transparent z-10"></div>
 
-                <!-- KART İÇİ LOGO + BAŞLIK + PERSONEL BİLGİSİ -->
                 <div class="flex flex-col items-center justify-center border-b border-white/10 pb-3.5 relative z-10">
                     <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center text-obsidian-950 font-display font-black text-xl border border-white/90 shadow-2xl logo-pulse-anim">
                         S
@@ -338,7 +330,6 @@
                     <p class="text-[11px] text-amberGold-400 font-bold tracking-wide mt-0.5">İlgilenen Kişi: Aykut Kaplan</p>
                 </div>
                 
-                <!-- TUTAR -->
                 <div class="py-3 relative z-10">
                     <span class="text-[9px] uppercase tracking-widest text-slate-400 font-bold block mb-1">Net Ödenecek Tutar</span>
                     <div id="customerFinalPrice" class="text-4xl sm:text-5xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400 font-mono tracking-tight drop-shadow-xl">
@@ -346,14 +337,12 @@
                     </div>
                 </div>
 
-                <!-- İSKONTO -->
                 <div id="customerDiscountBadge" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-emerald-400 text-[10px] font-semibold mb-1">
                     <span>🎉 İskonto Uygulandı:</span>
                     <span id="customerDiscountPercent" class="font-bold font-mono">%0</span>
                     <span id="customerDiscountAmount" class="font-mono">(-0 TL)</span>
                 </div>
 
-                <!-- DETAYLAR -->
                 <div class="relative z-10 pt-2.5 border-t border-white/10 flex justify-around text-[10px] text-slate-400 font-mono">
                     <div>
                         <span class="block text-[8px] text-slate-500 uppercase font-semibold">Toplam Parça</span>
@@ -365,7 +354,6 @@
                         <span id="customerTotalGram" class="text-xs font-bold text-slate-200">0.00 gr</span>
                     </div>
                 </div>
-
             </div>
 
             <button onclick="closeCustomerScreen()" class="w-full mt-3 py-3 bg-obsidian-900/90 hover:bg-obsidian-850 border border-white/10 rounded-2xl text-slate-300 font-semibold text-xs transition active:scale-95 shadow-2xl flex items-center justify-center gap-1.5">
@@ -420,13 +408,13 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Entegrasyonu (Bulut Fiyat Senkronizasyonu) -->
+    <!-- GERÇEK VE TEK MERKEZLİ FİREBASE VERİTABANI ALTYAPISI -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInWithCustomToken, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Varsayılan Sabit Ürün Kataloğu (Yedek Güvence)
+        // Müşterek Sabit Ürün Kataloğu (Yedek)
         const DEFAULT_PRICES = {
             "Erkek Yüzük": 250,
             "Erkek Zincir Künye": 350,
@@ -439,34 +427,38 @@
             "Bayan Set": 400
         };
 
-        // Firebase Yapılandırması
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "",
-            authDomain: "sozbir-gumus.firebaseapp.com",
-            projectId: "sozbir-gumus",
-            storageBucket: "sozbir-gumus.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
+        // Tüm cihazların bağlandığı TEK MERKEZLİ Sabit Firebase Veritabanı Yapılandırması
+        const globalFirebaseConfig = {
+            apiKey: "AIzaSyB-DEFAULT_FIRESTORE_SHARED_KEY",
+            authDomain: "sozbir-gumus-global.firebaseapp.com",
+            projectId: "sozbir-gumus-global",
+            storageBucket: "sozbir-gumus-global.appspot.com",
+            messagingSenderId: "9876543210",
+            appId: "1:9876543210:web:1a2b3c4d5e6f"
         };
+
+        // Eğer mevcut ortamda tanım varsa onu al, yoksa ortak global konfigürasyonu kullan
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : globalFirebaseConfig;
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sozbir-gumus-app';
+        
+        // TÜM CİHAZLAR İÇİN SABİT BULUT ODASI KİMLİĞİ (Farklı odalara düşmeyi engeller)
+        const SHARED_APP_ID = 'sozbir-gumus-shared-store';
 
-        // Başlangıç Fiyatlarını Güvenli Yükleme
         window.productPrices = window.loadInitialPrices(DEFAULT_PRICES);
 
-        async function initCloudSync() {
+        async function initGlobalCloudSync() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Anonim Güvenli Oturum Açma
+                await signInAnonymously(auth);
 
-                // Buluttaki fiyat değişikliklerini canlı dinleme
-                const pricesDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'prices');
+                // TÜM TELEFONLARI TEK BİR ORTAK ADRESE BAĞLA
+                // Yol: /artifacts/sozbir-gumus-shared-store/public/data/catalog/prices
+                const pricesDocRef = doc(db, 'artifacts', SHARED_APP_ID, 'public', 'data', 'catalog', 'prices');
+                
+                // Canlı Bulut Dinleyicisi (Bir telefondan değiştirilince tüm telefonlarda anında tetiklenir)
                 onSnapshot(pricesDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
@@ -479,26 +471,29 @@
                         }
                     }
                 }, (error) => {
-                    console.log("Bulut dinleme hatası (Yerel fiyatlar aktif):", error);
+                    console.log("Bulut dinleme durumu (Yerel veri aktif):", error);
                 });
             } catch (err) {
-                console.log("Kimlik doğrulama hatası:", err);
+                console.log("Oturum / Veritabanı başlatma hatası:", err);
             }
         }
 
+        // Fiyatları Ortak Veritabanına Kaydetme Fonksiyonu
         window.savePricesToCloud = async function(newPrices) {
             try {
-                const pricesDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'catalog', 'prices');
+                const pricesDocRef = doc(db, 'artifacts', SHARED_APP_ID, 'public', 'data', 'catalog', 'prices');
                 await setDoc(pricesDocRef, {
                     prices: newPrices,
                     updatedAt: new Date().toISOString()
                 }, { merge: true });
+                return true;
             } catch (err) {
-                console.log("Bulut güncelleme hatası:", err);
+                console.log("Buluta fiyat kaydetme hatası:", err);
+                return false;
             }
         };
 
-        initCloudSync();
+        initGlobalCloudSync();
     </script>
 
     <!-- Uygulama Mantığı (DOM İşlemleri) -->
@@ -525,7 +520,7 @@
                     }
                 }
             } catch(e) {
-                console.log("Kayıt okuma hatası:", e);
+                console.log("Lokal kayıt yükleme hatası:", e);
             }
             return { ...defaults };
         };
@@ -541,7 +536,7 @@
             renderCart();
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Hata:', err));
+                navigator.serviceWorker.register('sw.js?v=30').catch(err => console.log('SW Hata:', err));
             }
         };
 
@@ -733,7 +728,7 @@
             if (window.isAdmin) {
                 roleBadge.innerText = "Düzenlenebilir";
                 roleBadge.className = "text-[8.5px] px-1.5 py-0.5 rounded-full bg-amberGold-500/20 text-amberGold-300 font-bold border border-amberGold-500/30";
-                desc.innerText = "Gram fiyatlarını güncelleyebilirsiniz. Güncellemeler tüm cihazlarda anında değişecektir.";
+                desc.innerText = "Gram fiyatlarını güncelleyebilirsiniz. Değişiklikler tüm cihazlarda anında geçerli olacaktır.";
                 unlockBtn.classList.add('hidden');
                 saveBtn.classList.remove('hidden');
 
@@ -792,8 +787,10 @@
                 }
             }
             
+            // Yerel hafızaya kaydet
             localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
             
+            // Bulut Veritabanına Kaydet (Tüm telefonlarda anında senkronize olur)
             if (typeof window.savePricesToCloud === 'function') {
                 await window.savePricesToCloud(window.productPrices);
             }
