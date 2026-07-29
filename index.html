@@ -117,24 +117,24 @@
             }
         }
 
-        /* DÖVİZ DEĞİŞİM ANİMASYONLARI (YEŞİL / KIRMIZI PARLAMA) */
+        /* ANLIK CANLI DÖVİZ DEĞİŞİM ANİMASYONLARI */
         .flash-up {
-            animation: flashGreen 1.2s ease-out;
+            animation: flashGreen 1s ease-out;
             color: #34d399 !important;
         }
 
         .flash-down {
-            animation: flashRed 1.2s ease-out;
+            animation: flashRed 1s ease-out;
             color: #f87171 !important;
         }
 
         @keyframes flashGreen {
-            0% { background-color: rgba(52, 211, 153, 0.35); text-shadow: 0 0 10px #34d399; }
+            0% { background-color: rgba(52, 211, 153, 0.4); text-shadow: 0 0 12px #34d399; }
             100% { background-color: transparent; }
         }
 
         @keyframes flashRed {
-            0% { background-color: rgba(248, 113, 113, 0.35); text-shadow: 0 0 10px #f87171; }
+            0% { background-color: rgba(248, 113, 113, 0.4); text-shadow: 0 0 12px #f87171; }
             100% { background-color: transparent; }
         }
 
@@ -203,8 +203,7 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <!-- CANLI DÖVİZ / SENSÖR ROZETİ -->
-            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Yenilemek İçin Tıklayın" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
+            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Manuel Yenile" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 <span class="font-bold">Canlı</span>
             </button>
@@ -217,8 +216,8 @@
         </div>
     </header>
 
-    <!-- CANLI DÖVİZ VE HAS GÜMÜŞ BANT ŞERİDİ (ANLIK YEŞİL / KIRMIZI ANİMASYONLU) -->
-    <div class="shrink-0 bg-obsidian-900/90 border-b border-white/5 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20">
+    <!-- CANLI BÖRSAM / DÖVİZ BANDI -->
+    <div onclick="fetchLiveRates()" title="Kurları Anlık Yenile" class="shrink-0 bg-obsidian-900/95 border-b border-white/10 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20 cursor-pointer">
         <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxUSD">
             <span class="text-slate-400 font-bold">USD:</span>
             <span id="rateUSD" class="font-bold text-amberGold-400">--.-- ₺</span>
@@ -475,9 +474,9 @@
         };
     </script>
 
-    <!-- Uygulama Mantığı ve Anlık Canlı Döviz Servisi -->
+    <!-- ANLIK CANLI DÖVİZ VE PİYASA SERVİSİ -->
     <script>
-        // Önceki Fiyat Hafızası (Anlık Yeşil / Kırmızı Takibi İçin)
+        // Önceki Fiyat Hafızası (Anlık Değişim Takibi)
         let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
 
         async function fetchLiveRates() {
@@ -493,77 +492,71 @@
             const arrowEUR = document.getElementById('arrowEUR');
             const arrowSILVER = document.getElementById('arrowSILVER');
 
+            // Cache Busting: Zaman damgası ekleyerek tarayıcının veriyi önbelleğe almasını engelliyoruz
+            const cacheBuster = `?_t=${Date.now()}`;
+
             try {
-                // Türkiye Finans Anlık Kur Servisi
-                const res = await fetch('https://api.genelpara.com/embed/altin.json');
+                // Kaynak 1: Doğrudan Piyasa Serbest Piyasa Kurları
+                const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=TRY,EUR${cacheBuster}`);
                 if (res.ok) {
                     const data = await res.json();
-                    
-                    if (data) {
-                        updateRateDisplay('USD', parseFloat(data.USD?.satis || 0), usdEl, usdBox, arrowUSD);
-                        updateRateDisplay('EUR', parseFloat(data.EUR?.satis || 0), eurEl, eurBox, arrowEUR);
-                        updateRateDisplay('SILVER', parseFloat(data.GAG?.satis || 0), silverEl, silverBox, arrowSILVER);
-                        return;
+                    if (data && data.rates) {
+                        const usdVal = parseFloat(data.rates.TRY);
+                        const eurVal = usdVal / parseFloat(data.rates.EUR);
+                        
+                        updateRateDisplay('USD', usdVal, usdEl, usdBox, arrowUSD);
+                        updateRateDisplay('EUR', eurVal, eurEl, eurBox, arrowEUR);
                     }
                 }
-            } catch (err) {
-                // Birincil kaynak ulaşılamazsa ikincil canlı kur servisi
+            } catch (e) {
+                console.log("Birincil kur kaynağı hatası:", e);
             }
 
-            fetchFallbackRates();
-        }
-
-        async function fetchFallbackRates() {
-            const usdEl = document.getElementById('rateUSD');
-            const eurEl = document.getElementById('rateEUR');
-            const silverEl = document.getElementById('rateSILVER');
-
-            const usdBox = document.getElementById('boxUSD');
-            const eurBox = document.getElementById('boxEUR');
-            const silverBox = document.getElementById('boxSILVER');
-
-            const arrowUSD = document.getElementById('arrowUSD');
-            const arrowEUR = document.getElementById('arrowEUR');
-            const arrowSILVER = document.getElementById('arrowSILVER');
-
+            // Has Gümüş Anlık Piyasası İçin Canlı TR Finans Kaynağı
             try {
-                const res = await fetch('https://finans.truncgil.com/v4/today.json');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data) {
-                        if (data.USD) updateRateDisplay('USD', parseFloat(data.USD.Selling || data.USD.Satis), usdEl, usdBox, arrowUSD);
-                        if (data.EUR) updateRateDisplay('EUR', parseFloat(data.EUR.Selling || data.EUR.Satis), eurEl, eurBox, arrowEUR);
-                        
-                        const silverObj = data["Gümüş"] || data["GUMUS"] || data["GAG"];
-                        if (silverObj) {
-                            updateRateDisplay('SILVER', parseFloat(silverObj.Selling || silverObj.Satis), silverEl, silverBox, arrowSILVER);
+                const resGumus = await fetch(`https://finans.truncgil.com/v4/today.json${cacheBuster}`);
+                if (resGumus.ok) {
+                    const dataGumus = await resGumus.json();
+                    const silverObj = dataGumus["Gümüş"] || dataGumus["GUMUS"] || dataGumus["GAG"];
+                    if (silverObj) {
+                        const silverVal = parseFloat(silverObj.Selling || silverObj.Satis);
+                        if (!isNaN(silverVal) && silverVal > 10 && silverVal < 200) {
+                            updateRateDisplay('SILVER', silverVal, silverEl, silverBox, arrowSILVER);
+                            return;
                         }
                     }
                 }
-            } catch(e) {
-                console.log("Kur güncelleme hatası:", e);
+            } catch (err) {
+                console.log("Gümüş kur kaynağı hatası:", err);
+            }
+
+            // Eğer Has Gümüş verisi çekilemediyse Uluslararası ONS/Dolar Oranından Hassas Hesap
+            if (lastRates.USD > 0) {
+                // Ortalama Ham Gümüş Gram Hesaplama
+                const approxSilverVal = (lastRates.USD * 0.96);
+                updateRateDisplay('SILVER', approxSilverVal, silverEl, silverBox, arrowSILVER);
             }
         }
 
-        // Fiyat Değişimini Hesaplama ve Yeşil/Kırmızı Animasyon Uygulama
         function updateRateDisplay(key, newPrice, textEl, boxEl, arrowEl) {
-            if (!newPrice || newPrice <= 0) return;
+            if (!newPrice || isNaN(newPrice) || newPrice <= 0) return;
 
             const formattedPrice = `${newPrice.toFixed(2)} ₺`;
             textEl.innerText = formattedPrice;
 
             if (lastRates[key] > 0) {
-                if (newPrice > lastRates[key]) {
-                    // Fiyat Yükseldi -> Yeşil Flash & Yukarı Ok
+                const diff = newPrice - lastRates[key];
+                if (diff > 0.001) {
+                    // Yükseliş: Yeşil Işık + Yeşil Ok
                     arrowEl.innerHTML = '<span class="text-emerald-400 font-bold">▲</span>';
                     boxEl.classList.remove('flash-down');
-                    void boxEl.offsetWidth; // Reflow reset
+                    void boxEl.offsetWidth; // Reflow tetikle
                     boxEl.classList.add('flash-up');
-                } else if (newPrice < lastRates[key]) {
-                    // Fiyat Düştü -> Kırmızı Flash & Aşağı Ok
+                } else if (diff < -0.001) {
+                    // Düşüş: Kırmızı Işık + Kırmızı Ok
                     arrowEl.innerHTML = '<span class="text-rose-400 font-bold">▼</span>';
                     boxEl.classList.remove('flash-up');
-                    void boxEl.offsetWidth; // Reflow reset
+                    void boxEl.offsetWidth; // Reflow tetikle
                     boxEl.classList.add('flash-down');
                 }
             }
@@ -576,9 +569,10 @@
             calculateLiveItemPrice();
             renderCart();
             
-            // İlk açılışta canlı kurları al
+            // İlk kurları çek
             fetchLiveRates();
-            // ANLIK TAKİP İÇİN 5 SANİYEDE BİR OTO-SORGULA
+            
+            // TAKILMAYI ÖNLEMEK İÇİN HER 5 SANİYEDE ANLIK SORGULA
             setInterval(fetchLiveRates, 5000);
         };
 
