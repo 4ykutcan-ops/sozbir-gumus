@@ -117,26 +117,6 @@
             }
         }
 
-        .flash-up {
-            animation: flashGreen 0.8s ease-out;
-            color: #34d399 !important;
-        }
-
-        .flash-down {
-            animation: flashRed 0.8s ease-out;
-            color: #f87171 !important;
-        }
-
-        @keyframes flashGreen {
-            0% { background-color: rgba(52, 211, 153, 0.4); text-shadow: 0 0 10px #34d399; }
-            100% { background-color: transparent; }
-        }
-
-        @keyframes flashRed {
-            0% { background-color: rgba(248, 113, 113, 0.4); text-shadow: 0 0 10px #f87171; }
-            100% { background-color: transparent; }
-        }
-
         .vip-input {
             background: rgba(3, 7, 18, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -166,6 +146,12 @@
             transform: scale(0.98);
         }
 
+        @media (orientation: landscape) {
+            .landscape-hide {
+                display: none !important;
+            }
+        }
+
         button, input, select {
             touch-action: manipulation;
         }
@@ -181,7 +167,7 @@
 <body class="text-slate-100 font-sans h-full flex flex-col justify-between overflow-hidden antialiased">
 
     <!-- Üst Başlık (Header) -->
-    <header class="shrink-0 pb-1.5 border-b border-white/10 bg-obsidian-950/95 backdrop-blur-md flex justify-between items-center z-30 shadow-md">
+    <header class="shrink-0 pb-1.5 border-b border-white/10 bg-obsidian-950/95 backdrop-blur-md flex justify-between items-center z-30 shadow-md px-2">
         <div class="flex items-center gap-1.5">
             <div class="relative w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center text-obsidian-950 font-display font-black text-xs sm:text-sm border border-white/50 shadow-sm">
                 S
@@ -196,10 +182,10 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Anlık Tazele" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
+            <div id="cloudStatusIcon" title="Bulut Bağlantısı" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="font-bold">Canlı</span>
-            </button>
+                <span class="font-bold">Bulut</span>
+            </div>
             <button onclick="toggleAdminModal()" id="adminBtn" class="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 text-[10px] font-semibold rounded-lg border border-white/10 flex items-center gap-1 active:scale-95">
                 <span>🔑</span> <span id="adminBtnText">Yönetici</span>
             </button>
@@ -209,33 +195,14 @@
         </div>
     </header>
 
-    <!-- TAM KÜSÜRATLI CANLI DÖVİZ BANDI -->
-    <div onclick="fetchLiveRates()" title="Tazele" class="shrink-0 bg-obsidian-900/95 border-b border-white/10 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20 cursor-pointer">
-        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxUSD">
-            <span class="text-slate-400 font-bold">USD:</span>
-            <span id="rateUSD" class="font-bold text-amberGold-400">Yükleniyor...</span>
-            <span id="arrowUSD" class="text-[9px]"></span>
-        </div>
-        <div class="border-r border-white/10 h-3"></div>
-        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxEUR">
-            <span class="text-slate-400 font-bold">EUR:</span>
-            <span id="rateEUR" class="font-bold text-amberGold-400">Yükleniyor...</span>
-            <span id="arrowEUR" class="text-[9px]"></span>
-        </div>
-        <div class="border-r border-white/10 h-3"></div>
-        <div class="flex items-center gap-1 rounded px-1 transition-all" id="boxSILVER">
-            <span class="text-slate-400 font-bold">Has Gümüş:</span>
-            <span id="rateSILVER" class="font-bold text-emerald-400">Yükleniyor...</span>
-            <span id="arrowSILVER" class="text-[9px]"></span>
-        </div>
-    </div>
-
     <!-- ANA HESAPLAMA EKRANI -->
     <main id="mainCalculator" class="flex-1 p-1.5 sm:p-2 max-w-5xl mx-auto w-full overflow-hidden flex flex-col justify-between">
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 h-full items-stretch overflow-hidden">
             
+            <!-- SOL KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
+                
                 <div class="vip-card rounded-xl p-2 space-y-1.5 shrink-0">
                     <div class="flex justify-between items-center border-b border-white/10 pb-0.5">
                         <span class="text-[9px] font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -267,6 +234,7 @@
                     <div class="bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-amberGold-500/30 rounded-lg p-1.5 flex justify-between items-center shadow-inner">
                         <div>
                             <span class="text-[8.5px] text-amberGold-400 font-bold uppercase tracking-widest block">Anlık Tutar</span>
+                            <span class="text-[8px] text-slate-400 landscape-hide">Gram x Birim Fiyat</span>
                         </div>
                         <div id="liveItemPriceDisplay" class="text-sm sm:text-base font-display font-extrabold gold-text font-mono">
                             0.00 TL
@@ -290,9 +258,12 @@
                         <p class="text-[10px] text-slate-500 text-center py-1">Sepet boş.</p>
                     </div>
                 </div>
+
             </div>
 
+            <!-- SAĞ KOLON -->
             <div class="flex flex-col justify-between space-y-1.5 h-full overflow-hidden">
+                
                 <div class="vip-card rounded-xl p-2 flex-1 flex flex-col justify-between space-y-1.5 overflow-hidden">
                     <div class="flex justify-between items-center border-b border-white/10 pb-0.5 shrink-0">
                         <span class="text-[9px] font-display font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -335,6 +306,7 @@
                         <span>👁️</span> MÜŞTERİYE FİYAT GÖSTER
                     </button>
                 </div>
+
             </div>
 
         </div>
@@ -458,98 +430,12 @@
         };
     </script>
 
-    <!-- TAM KÜSÜRATLI VE ANLIK AKIŞ SAĞLAYAN DÖVİZ MOTORU -->
+    <!-- UYGULAMA İŞLEMLERİ (KUR SİSTEMİ OLMADAN) -->
     <script>
-        let lastRates = { USD: 0, EUR: 0, SILVER: 0 };
-
-        async function fetchLiveRates() {
-            const usdEl = document.getElementById('rateUSD');
-            const eurEl = document.getElementById('rateEUR');
-            const silverEl = document.getElementById('rateSILVER');
-
-            const usdBox = document.getElementById('boxUSD');
-            const eurBox = document.getElementById('boxEUR');
-            const silverBox = document.getElementById('boxSILVER');
-
-            const arrowUSD = document.getElementById('arrowUSD');
-            const arrowEUR = document.getElementById('arrowEUR');
-            const arrowSILVER = document.getElementById('arrowSILVER');
-
-            const timestamp = `?_cb=${Date.now()}`;
-
-            try {
-                // Frankfurt ve Küresel Döviz Verilerini Tam 4 Küsürat Hassasiyetiyle Çek
-                const res = await fetch(`https://api.frankfurter.app/latest?from=USD&to=TRY,EUR${timestamp}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.rates && data.rates.TRY) {
-                        const usdTry = parseFloat(data.rates.TRY);
-                        const eurTry = usdTry / parseFloat(data.rates.EUR || 1.08);
-                        const silverGram = usdTry * 1.865; // Canlı gümüş borsa katsayısı
-
-                        updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
-                        updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
-                        updateRateDisplay('SILVER', silverGram, silverEl, silverBox, arrowSILVER);
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.log("Frankfurter API geçiş yapılıyor...");
-            }
-
-            // Yedek Canlı Küresel Piyasa Kaynağı
-            try {
-                const resAlt = await fetch(`https://open.er-api.com/v6/latest/USD${timestamp}`);
-                if (resAlt.ok) {
-                    const dataAlt = await resAlt.json();
-                    if (dataAlt && dataAlt.rates && dataAlt.rates.TRY) {
-                        const usdTry = parseFloat(dataAlt.rates.TRY);
-                        const eurTry = usdTry / (dataAlt.rates.EUR || 1.08);
-                        const silverGram = usdTry * 1.865;
-
-                        updateRateDisplay('USD', usdTry, usdEl, usdBox, arrowUSD);
-                        updateRateDisplay('EUR', eurTry, eurEl, eurBox, arrowEUR);
-                        updateRateDisplay('SILVER', silverGram, silverEl, silverBox, arrowSILVER);
-                    }
-                }
-            } catch (e) {
-                console.log("Yedek kur hatası.");
-            }
-        }
-
-        function updateRateDisplay(key, newPrice, textEl, boxEl, arrowEl) {
-            if (!newPrice || isNaN(newPrice) || newPrice <= 0) return;
-
-            // Tam küsüratlı gösterim (Örn: 53.8475 formatı için toFixed(4) veya 2 hane istenirse ayarlanabilir)
-            // Sizin talebiniz doğrultusunda tam hassasiyeti (4 basamak küsürat) ekrana yansıtıyoruz:
-            const formattedPrice = `${newPrice.toFixed(4)} ₺`;
-            textEl.innerText = formattedPrice;
-
-            if (lastRates[key] > 0) {
-                const diff = newPrice - lastRates[key];
-                if (diff > 0.0001) {
-                    arrowEl.innerHTML = '<span class="text-emerald-400 font-bold">▲</span>';
-                    boxEl.classList.remove('flash-down');
-                    void boxEl.offsetWidth;
-                    boxEl.classList.add('flash-up');
-                } else if (diff < -0.0001) {
-                    arrowEl.innerHTML = '<span class="text-rose-400 font-bold">▼</span>';
-                    boxEl.classList.remove('flash-up');
-                    void boxEl.offsetWidth;
-                    boxEl.classList.add('flash-down');
-                }
-            }
-            lastRates[key] = newPrice;
-        }
-
         window.onload = function() {
             populateProductSelect();
             calculateLiveItemPrice();
             renderCart();
-            
-            fetchLiveRates();
-            // Her 4 saniyede bir tam küsüratlı canlı borsa akışı
-            setInterval(fetchLiveRates, 4000);
         };
 
         function populateProductSelect() {
