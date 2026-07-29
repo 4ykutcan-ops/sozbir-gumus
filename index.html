@@ -47,9 +47,9 @@
     </script>
     <style>
         header {
-            padding-top: max(0.5rem, env(safe-area-inset-top));
-            padding-left: max(0.75rem, env(safe-area-inset-left));
-            padding-right: max(0.75rem, env(safe-area-inset-right));
+            padding-top: max(0.4rem, env(safe-area-inset-top));
+            padding-left: max(0.5rem, env(safe-area-inset-left));
+            padding-right: max(0.5rem, env(safe-area-inset-right));
         }
 
         body {
@@ -182,6 +182,11 @@
         </div>
 
         <div class="flex items-center gap-1">
+            <!-- CANLI DÖVİZ / SENSÖR ROZETİ -->
+            <button onclick="fetchLiveRates()" id="cloudStatusIcon" title="Yenilemek İçin Tıklayın" class="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1 transition">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="font-bold">Canlı</span>
+            </button>
             <button onclick="toggleAdminModal()" id="adminBtn" class="px-2 py-1 bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 text-[10px] font-semibold rounded-lg border border-white/10 flex items-center gap-1 active:scale-95">
                 <span>🔑</span> <span id="adminBtnText">Yönetici</span>
             </button>
@@ -190,6 +195,24 @@
             </button>
         </div>
     </header>
+
+    <!-- CANLI DÖVİZ VE PİYASA BANT ŞERİDİ -->
+    <div class="shrink-0 bg-obsidian-900/90 border-b border-white/5 px-2 py-1 flex items-center justify-around text-[10px] font-mono shadow-inner z-20">
+        <div class="flex items-center gap-1">
+            <span class="text-slate-400 font-bold">USD:</span>
+            <span id="rateUSD" class="text-amberGold-400 font-bold">--.-- ₺</span>
+        </div>
+        <div class="border-r border-white/10 h-3"></div>
+        <div class="flex items-center gap-1">
+            <span class="text-slate-400 font-bold">EUR:</span>
+            <span id="rateEUR" class="text-amberGold-400 font-bold">--.-- ₺</span>
+        </div>
+        <div class="border-r border-white/10 h-3"></div>
+        <div class="flex items-center gap-1">
+            <span class="text-slate-400 font-bold">Ham Gümüş (gr):</span>
+            <span id="rateSILVER" class="text-emerald-400 font-bold">--.-- ₺</span>
+        </div>
+    </div>
 
     <!-- ANA HESAPLAMA EKRANI -->
     <main id="mainCalculator" class="flex-1 p-1.5 sm:p-2 max-w-5xl mx-auto w-full overflow-hidden flex flex-col justify-between">
@@ -428,12 +451,79 @@
         };
     </script>
 
-    <!-- Uygulama Mantığı (DOM İşlemleri) -->
+    <!-- Uygulama Mantığı ve Canlı Döviz Servisi -->
     <script>
+        // CANLI DÖVİZ VE PİYASA FİYATI ÇEKME FONKSİYONU
+        async function fetchLiveRates() {
+            const usdEl = document.getElementById('rateUSD');
+            const eurEl = document.getElementById('rateEUR');
+            const silverEl = document.getElementById('rateSILVER');
+
+            try {
+                // Türkiye piyasası canlı finans API'sinden veri çek
+                const res = await fetch('https://finans.truncgil.com/v4/today.json');
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    if (data && data.USD) {
+                        usdEl.innerText = `${parseFloat(data.USD.Selling || data.USD.Satis).toFixed(2)} ₺`;
+                    }
+                    if (data && data.EUR) {
+                        eurEl.innerText = `${parseFloat(data.EUR.Selling || data.EUR.Satis).toFixed(2)} ₺`;
+                    }
+                    if (data && (data["Gümüş"] || data["GUMUS"])) {
+                        const silverObj = data["Gümüş"] || data["GUMUS"];
+                        silverEl.innerText = `${parseFloat(silverObj.Selling || silverObj.Satis).toFixed(2)} ₺`;
+                    } else {
+                        // Yedek Ham Gümüş Hesabı
+                        fetchFallbackExchangeRates();
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.log("Birincil Finans API baglanti hatasi, yedek API deneniyor:", err);
+            }
+
+            // Birincil API basarisiz olursa Yedek Uluslararası API
+            fetchFallbackExchangeRates();
+        }
+
+        async function fetchFallbackExchangeRates() {
+            const usdEl = document.getElementById('rateUSD');
+            const eurEl = document.getElementById('rateEUR');
+            const silverEl = document.getElementById('rateSILVER');
+
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.rates && data.rates.TRY) {
+                        const usdTry = data.rates.TRY;
+                        usdEl.innerText = `${usdTry.toFixed(2)} ₺`;
+                        
+                        if (data.rates.EUR) {
+                            const eurTry = usdTry / data.rates.EUR;
+                            eurEl.innerText = `${eurTry.toFixed(2)} ₺`;
+                        }
+                        
+                        // Ham gümüş ortalama gr tahmini piyasa değeri
+                        const approxSilverGram = (usdTry * 0.95);
+                        silverEl.innerText = `~${approxSilverGram.toFixed(2)} ₺`;
+                    }
+                }
+            } catch (e) {
+                console.log("Yedek kur API hatasi:", e);
+            }
+        }
+
         window.onload = function() {
             populateProductSelect();
             calculateLiveItemPrice();
             renderCart();
+            
+            // Canlı kurları çek ve her 30 saniyede bir otomatik tazele
+            fetchLiveRates();
+            setInterval(fetchLiveRates, 30000);
         };
 
         function populateProductSelect() {
@@ -685,7 +775,6 @@
             
             localStorage.setItem('gumus_prices', JSON.stringify(window.productPrices));
             
-            // Buluta Kaydet (Ayrı db.js modülünü çağırır)
             if (typeof window.savePricesToCloud === 'function') {
                 await window.savePricesToCloud(window.productPrices);
             }
